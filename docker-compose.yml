@@ -1,0 +1,48 @@
+services:
+  db:
+    image: mysql:9.1.0
+    restart: always
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: admin123
+      MYSQL_DATABASE: db_products_api
+    ports:
+      - "3308:3306"
+    expose:
+      - 3306
+    networks:
+      - products-network
+  products-api:
+    image: maxzdosreis/products-api
+    restart: always
+    build: ./products-api
+    environment:
+      TZ: America/Sao_Paulo
+      SPRING.DATASOURCE.USERNAME: root
+      SPRING.DATASOURCE.PASSWORD: root
+    command: mvn spring-boot:run
+    ports:
+      - 80:80
+    depends_on:
+      - db
+    networks:
+      - products-network
+  portainer:
+    image: portainer/portainer-ce:latest
+    restart: always
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - products-network
+
+volumes:
+  portainer_data:
+
+networks:
+  products-network:
+    driver: bridge
