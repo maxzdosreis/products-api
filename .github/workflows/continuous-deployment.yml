@@ -29,8 +29,13 @@ jobs:
         # working-directory: ./
         run: mvn clean package
 
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       - name: Docker Compose Build
-        working-directory: ./
+        # working-directory: ./
         run: docker compose build
 
       - name: Push to Docker Hub Container Registry
