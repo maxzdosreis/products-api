@@ -17,7 +17,9 @@ services:
   products-api:
     image: maxzdosreis/products-api
     restart: always
-    build: ./products-api
+    build:
+      context: ./products-api
+      dockerfile: dockerfiles/Dockerfile
     environment:
       TZ: America/Sao_Paulo
       SPRING.DATASOURCE.USERNAME: root
