@@ -35,7 +35,7 @@ jobs:
           sudo apt-get install -y docker-compose
 
       - name: Docker Compose Build
-        working-directory: /home/runner/work/products-api
+        working-directory: /home/runner/work/products-api/products-api
         run: docker compose build
 
       - name: Push to Docker Hub Container Registry
