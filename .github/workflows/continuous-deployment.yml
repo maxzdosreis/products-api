@@ -36,10 +36,7 @@ jobs:
 
       - name: Docker Compose Build
         working-directory: .
-        run: |
-          pwd
-          ls -la
-          docker compose build
+        run: docker compose build
 
       - name: Push to Docker Hub Container Registry
         run: |

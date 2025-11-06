@@ -18,7 +18,7 @@ services:
     image: maxzdosreis/products-api
     restart: always
     build:
-      context: ./products-api
+      context: .
       dockerfile: dockerfiles/Dockerfile
     environment:
       TZ: America/Sao_Paulo
