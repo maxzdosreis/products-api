@@ -1,0 +1,17 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: products-api
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+    show-sql: false
+    open-in-view: false
+logging:
+  level:
+    com.maxzdosreis: DEBUG
