@@ -4,7 +4,10 @@ spring:
   application:
     name: products-api
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
   jpa:
     hibernate:
       ddl-auto: none
@@ -12,6 +15,7 @@ spring:
       hibernate:
     show-sql: false
     open-in-view: false
+    database-platform: org.hibernate.dialect.H2Dialect
 logging:
   level:
     com.maxzdosreis: DEBUG
