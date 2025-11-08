@@ -44,7 +44,7 @@ public class ProductService {
         if (productDto == null) throw new RequiredObjectIsNullException();
 
         logger.info("Updating one Product");
-        Product entity = productRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("Product not found"));
+        Product entity = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
         entity.setName(productDto.getName());
         entity.setDescription(productDto.getDescription());
         entity.setPrice(productDto.getPrice());
