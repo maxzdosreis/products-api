@@ -1,5 +1,7 @@
 server:
   port: 8888
+cors:
+  originPatterns: http://localhost:8080,http://localhost:3000
 spring:
   application:
     name: products-api
@@ -19,3 +21,9 @@ spring:
 logging:
   level:
     com.maxzdosreis: DEBUG
+spring-doc:
+  paths-to-match:
+    - /auth/**
+    - /api/**
+  swagger-ui:
+    use-root-path: true
