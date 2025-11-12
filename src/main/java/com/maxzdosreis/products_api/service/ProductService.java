@@ -1,5 +1,6 @@
 package com.maxzdosreis.products_api.service;
 
+import com.maxzdosreis.products_api.controller.ProductController;
 import com.maxzdosreis.products_api.data.dto.ProductDto;
 import com.maxzdosreis.products_api.exception.RequiredObjectIsNullException;
 import com.maxzdosreis.products_api.exception.ResourceNotFoundException;
@@ -14,6 +15,8 @@ import java.util.List;
 
 import static com.maxzdosreis.products_api.mapper.ObjectMapper.parseObject;
 import static com.maxzdosreis.products_api.mapper.ObjectMapper.parseListObjects;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Service
 public class ProductService {
@@ -31,13 +34,15 @@ public class ProductService {
         var entity = parseObject(productDto, Product.class);
 
         var dto =  parseObject(productRepository.save(entity), ProductDto.class);
+        addHateoasLinks(dto);
         return dto;
     }
 
     public List<ProductDto> findAll(){
         logger.info("Finding all Products");
-        var entity = parseListObjects(productRepository.findAll(), ProductDto.class);
-        return entity;
+        var products = parseListObjects(productRepository.findAll(), ProductDto.class);
+        products.forEach(this::addHateoasLinks);
+        return products;
     }
 
     public ProductDto updateProduct(Long id, ProductDto productDto) {
@@ -51,6 +56,7 @@ public class ProductService {
         entity.setQuantity(productDto.getQuantity());
 
         var dto = parseObject(productRepository.save(entity), ProductDto.class);
+        addHateoasLinks(dto);
         return dto;
     }
 
@@ -59,6 +65,7 @@ public class ProductService {
 
         var entity = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
         var dto = parseObject(entity, ProductDto.class);
+        addHateoasLinks(dto);
         return dto;
     }
 
@@ -66,5 +73,13 @@ public class ProductService {
         logger.info("Deleting one Product");
         Product entity = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
         productRepository.delete(entity);
+    }
+
+    private void addHateoasLinks(ProductDto productDto) {
+        productDto.add(linkTo(methodOn(ProductController.class).findById(productDto.getId())).withSelfRel().withType("GET"));
+        productDto.add(linkTo(methodOn(ProductController.class).findAll()).withRel("findAll").withType("GET"));
+        productDto.add(linkTo(methodOn(ProductController.class).create(productDto)).withRel("create").withType("POST"));
+        productDto.add(linkTo(methodOn(ProductController.class).update(productDto.getId(), productDto)).withRel("update").withType("PUT"));
+        productDto.add(linkTo(methodOn(ProductController.class).delete(productDto.getId())).withRel("delete").withType("DELETE"));
     }
 }

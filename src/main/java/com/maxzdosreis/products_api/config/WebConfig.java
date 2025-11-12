@@ -29,7 +29,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .defaultContentType(MediaType.APPLICATION_JSON)
                     .mediaType("json", MediaType.APPLICATION_JSON)
                     // adicionado as extensões xml e yaml, para no futuro produzir ou consumir outras exntensões além de json
-                    .mediaType("xml", MediaType.APPLICATION_XML)
-                    .mediaType("yaml", MediaType.APPLICATION_YAML);
+                    .mediaType("xml", MediaType.APPLICATION_XML);
+                    //.mediaType("yaml", MediaType.APPLICATION_YAML); - irei adicionar novamente depois
     }
 }
