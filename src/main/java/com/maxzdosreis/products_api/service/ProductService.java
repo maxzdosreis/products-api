@@ -6,6 +6,7 @@ import com.maxzdosreis.products_api.exception.RequiredObjectIsNullException;
 import com.maxzdosreis.products_api.exception.ResourceNotFoundException;
 import com.maxzdosreis.products_api.model.Product;
 import com.maxzdosreis.products_api.repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +70,19 @@ public class ProductService {
         return dto;
     }
 
+    @Transactional
+    public ProductDto disableProduct(Long id) {
+        logger.info("Disabling one Product");
+
+        productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        productRepository.disableProduct(id);
+
+        var entity = productRepository.findById(id).get();
+        var dto = parseObject(entity, ProductDto.class);
+        addHateoasLinks(dto);
+        return dto;
+    }
+
     public void delete(Long id) {
         logger.info("Deleting one Product");
         Product entity = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
@@ -80,6 +94,7 @@ public class ProductService {
         productDto.add(linkTo(methodOn(ProductController.class).findAll()).withRel("findAll").withType("GET"));
         productDto.add(linkTo(methodOn(ProductController.class).create(productDto)).withRel("create").withType("POST"));
         productDto.add(linkTo(methodOn(ProductController.class).update(productDto.getId(), productDto)).withRel("update").withType("PUT"));
+        productDto.add(linkTo(methodOn(ProductController.class).disableProduct(productDto.getId())).withRel("disable").withType("PATCH"));
         productDto.add(linkTo(methodOn(ProductController.class).delete(productDto.getId())).withRel("delete").withType("DELETE"));
     }
 }

@@ -35,4 +35,7 @@ public class Product {
     @NotNull
     @Positive
     private Integer quantity;
+
+    @Column(nullable = false)
+    private Boolean enabled;
 }

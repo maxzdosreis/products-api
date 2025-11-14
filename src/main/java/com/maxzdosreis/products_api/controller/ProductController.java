@@ -51,6 +51,14 @@ public class ProductController {
         return ResponseEntity.ok().body(product);
     }
 
+    @PatchMapping(value = "/{id}",
+        produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    public ResponseEntity<ProductDto> disableProduct(@PathVariable("id") Long id) {
+        var dto = productService.disableProduct(id);
+        return ResponseEntity.ok().body(dto);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable("id") Long id){
         productService.delete(id);
