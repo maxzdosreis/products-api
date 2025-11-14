@@ -71,6 +71,19 @@ public class ProductService {
     }
 
     @Transactional
+    public ProductDto enableProduct(Long id) {
+        logger.info("Enabling one Product");
+
+        productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        productRepository.enableProduct(id);
+
+        var entity = productRepository.findById(id).get();
+        var dto = parseObject(entity, ProductDto.class);
+        addHateoasLinks(dto);
+        return dto;
+    }
+
+    @Transactional
     public ProductDto disableProduct(Long id) {
         logger.info("Disabling one Product");
 
@@ -94,6 +107,7 @@ public class ProductService {
         productDto.add(linkTo(methodOn(ProductController.class).findAll()).withRel("findAll").withType("GET"));
         productDto.add(linkTo(methodOn(ProductController.class).create(productDto)).withRel("create").withType("POST"));
         productDto.add(linkTo(methodOn(ProductController.class).update(productDto.getId(), productDto)).withRel("update").withType("PUT"));
+        productDto.add(linkTo(methodOn(ProductController.class).enableProduct(productDto.getId())).withRel("enable").withType("PATCH"));
         productDto.add(linkTo(methodOn(ProductController.class).disableProduct(productDto.getId())).withRel("disable").withType("PATCH"));
         productDto.add(linkTo(methodOn(ProductController.class).delete(productDto.getId())).withRel("delete").withType("DELETE"));
     }

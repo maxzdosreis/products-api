@@ -51,6 +51,14 @@ public class ProductController {
         return ResponseEntity.ok().body(product);
     }
 
+    @PatchMapping(value = "/{id}/enable",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    public ResponseEntity<ProductDto> enableProduct(@PathVariable("id") Long id) {
+        var dto = productService.enableProduct(id);
+        return ResponseEntity.ok().body(dto);
+    }
+
     @PatchMapping(value = "/{id}",
         produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
