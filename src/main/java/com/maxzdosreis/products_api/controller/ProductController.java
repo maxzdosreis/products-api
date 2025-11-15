@@ -59,7 +59,7 @@ public class ProductController {
         return ResponseEntity.ok().body(dto);
     }
 
-    @PatchMapping(value = "/{id}",
+    @PatchMapping(value = "/{id}/disable",
         produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
     public ResponseEntity<ProductDto> disableProduct(@PathVariable("id") Long id) {
