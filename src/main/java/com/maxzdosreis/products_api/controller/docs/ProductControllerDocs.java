@@ -22,14 +22,14 @@ public interface ProductControllerDocs {
             description = "Adds a new Product by passing in a JSON representation of the product.",
             tags = {"Product"},
             responses = {
-                @ApiResponse(
-                        description = "Success",
-                        responseCode = "200",
-                        content = @Content(schema = @Schema(implementation = ProductDto.class))
-                ),
-                @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
-                @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ProductDto.class))
+                    ),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
     ProductDto create(@Valid @RequestBody ProductDto productDto);
@@ -62,16 +62,16 @@ public interface ProductControllerDocs {
             description = "Find a specific product by your ID",
             tags = {"Product"},
             responses = {
-                @ApiResponse(
-                        description = "Success",
-                        responseCode = "200",
-                        content = @Content(schema = @Schema(implementation = ProductDto.class))
-                ),
-                @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
-                @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ProductDto.class))
+                    ),
+                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
     ResponseEntity<ProductDto> findById(@PathVariable("id") Long id);
@@ -80,33 +80,69 @@ public interface ProductControllerDocs {
             description = "Updates a product's information by passing in a JSON representation of the updated product.",
             tags = {"Product"},
             responses = {
-                @ApiResponse(
-                        description = "Success",
-                        responseCode = "200",
-                        content = @Content(schema = @Schema(implementation = ProductDto.class))
-                ),
-                @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
-                @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
-                @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ProductDto.class))
+                    ),
+                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
     ResponseEntity<ProductDto> update(@PathVariable("id") Long id, @Valid @RequestBody ProductDto productDto);
+
+    @Operation(summary = "Enable a Product",
+            description = "Enable a specific product by your ID",
+            tags = {"Product"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ProductDto.class))
+                    ),
+                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<ProductDto> enableProduct(@PathVariable("id") Long id);
+
+    @Operation(summary = "Disable a Product",
+            description = "Disable a specific product by your ID",
+            tags = {"Product"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ProductDto.class))
+                    ),
+                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<ProductDto> disableProduct(@PathVariable("id") Long id);
 
     @Operation(summary = "Deletes a Products",
             description = "Deletes a specific product by their ID",
             tags = {"Product"},
             responses = {
-                @ApiResponse(
-                        description = "No Content",
-                        responseCode = "204",
-                        content = @Content
-                ),
-                @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
-                @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
-                @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+                    @ApiResponse(
+                            description = "No Content",
+                            responseCode = "204",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
     ResponseEntity<?> delete(@PathVariable("id") Long id);
