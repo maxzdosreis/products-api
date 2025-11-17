@@ -17,4 +17,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Product p SET p.enabled = true WHERE p.id =:id")
     void enableProduct(@Param("id") Long id);
+
+    boolean existsByName(String name);
 }

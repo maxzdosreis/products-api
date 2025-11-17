@@ -2,6 +2,7 @@ package com.maxzdosreis.products_api.service;
 
 import com.maxzdosreis.products_api.controller.ProductController;
 import com.maxzdosreis.products_api.data.dto.ProductDto;
+import com.maxzdosreis.products_api.exception.BadRequestException;
 import com.maxzdosreis.products_api.exception.RequiredObjectIsNullException;
 import com.maxzdosreis.products_api.exception.ResourceNotFoundException;
 import com.maxzdosreis.products_api.model.Product;
@@ -31,7 +32,12 @@ public class ProductService {
 
         if (productDto == null) throw new RequiredObjectIsNullException();
 
-        logger.info("Creating one Product");
+        logger.info("Creating one Product: {}", productDto.getName());
+
+        if (productRepository.existsByName(productDto.getName())) {
+            throw new BadRequestException("Já existe um produto com o nome: " + productDto.getName());
+        }
+
         var entity = parseObject(productDto, Product.class);
 
         var dto =  parseObject(productRepository.save(entity), ProductDto.class);
@@ -50,7 +56,15 @@ public class ProductService {
         if (productDto == null) throw new RequiredObjectIsNullException();
 
         logger.info("Updating one Product");
+
         Product entity = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+
+        if (!entity.getName().equals(productDto.getName())) {
+            if (productRepository.existsByName(productDto.getName())) {
+                throw new BadRequestException("Já existe um produto com o nome: " + productDto.getName());
+            }
+        }
+
         entity.setName(productDto.getName());
         entity.setDescription(productDto.getDescription());
         entity.setPrice(productDto.getPrice());
