@@ -1,0 +1,2 @@
+ALTER TABLE `products`
+    ADD COLUMN `enabled` BOOLEAN NOT NULL DEFAULT TRUE AFTER `quantity`;

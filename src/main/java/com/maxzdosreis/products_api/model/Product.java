@@ -36,6 +36,6 @@ public class Product {
     @Positive
     private Integer quantity;
 
-    @Column(nullable = false, columnDefinition = "BIT(1) DEFAULT b'1'")
+    @Column(nullable = false)
     private Boolean enabled = true;
 }
