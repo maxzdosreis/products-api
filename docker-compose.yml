@@ -5,37 +5,45 @@ services:
     environment:
       TZ: America/Sao_Paulo
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: docker
-      MYSQL_PASSWORD: admin123
       MYSQL_DATABASE: db_products_api
     ports:
       - "3308:3306"
-    expose:
-      - 3306
     networks:
       - products-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   products-api:
-    image: maxzdosreis/products-api
+    image: maxzdosreis/products-api:latest
     restart: always
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile
     environment:
       TZ: America/Sao_Paulo
-      SPRING.DATASOURCE.USERNAME: root
-      SPRING.DATASOURCE.PASSWORD: root
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-db_products_api}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-root}
     command: mvn spring-boot:run
     ports:
-      - 80:80
+      - "80:80"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+        required: false
     networks:
       - products-network
+
   portainer:
     image: portainer/portainer-ce:latest
     restart: always
     ports:
-      - 9000:9000
+      - "9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
