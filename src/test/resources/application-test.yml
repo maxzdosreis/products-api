@@ -7,7 +7,7 @@ spring:
     name: products-api
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password:
   jpa:
@@ -15,9 +15,13 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
-    show-sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: true
     open-in-view: false
     database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: false
 logging:
   level:
     com.maxzdosreis: DEBUG
