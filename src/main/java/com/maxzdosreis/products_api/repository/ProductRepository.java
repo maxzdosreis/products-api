@@ -1,6 +1,8 @@
 package com.maxzdosreis.products_api.repository;
 
 import com.maxzdosreis.products_api.model.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +21,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     void enableProduct(@Param("id") Long id);
 
     boolean existsByName(String name);
+
+    @Query("SELECT p FROM Product p WHERE p.name LIKE LOWER(CONCAT('%',:name,'%'))")
+    Page<Product> findProductByName(String name, Pageable pageable);
 }

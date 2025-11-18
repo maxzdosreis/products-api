@@ -11,6 +11,11 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +29,9 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class ProductService {
 
     private Logger logger = LoggerFactory.getLogger(ProductService.class.getName());
+
+    @Autowired
+    PagedResourcesAssembler<ProductDto> assembler;
 
     @Autowired
     ProductRepository productRepository;
@@ -45,11 +53,23 @@ public class ProductService {
         return dto;
     }
 
-    public List<ProductDto> findAll(){
+    public PagedModel<EntityModel<ProductDto>> findAll(Pageable pageable){
         logger.info("Finding all Products");
-        var products = parseListObjects(productRepository.findAll(), ProductDto.class);
-        products.forEach(this::addHateoasLinks);
-        return products;
+        var products = productRepository.findAll(pageable);
+
+        var productsWithLinks = products.map(product -> {
+            var dto = parseObject(product, ProductDto.class);
+            addHateoasLinks(dto);
+            return dto;
+        });
+
+        Link findAllLink = linkTo(methodOn(ProductController.class)
+                .findAll(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        String.valueOf(pageable.getSort())))
+                .withSelfRel();
+        return assembler.toModel(productsWithLinks,findAllLink);
     }
 
     public ProductDto updateProduct(Long id, ProductDto productDto) {
@@ -118,7 +138,7 @@ public class ProductService {
 
     private void addHateoasLinks(ProductDto productDto) {
         productDto.add(linkTo(methodOn(ProductController.class).findById(productDto.getId())).withSelfRel().withType("GET"));
-        productDto.add(linkTo(methodOn(ProductController.class).findAll()).withRel("findAll").withType("GET"));
+        productDto.add(linkTo(methodOn(ProductController.class).findAll(1,12,"asc")).withRel("findAll").withType("GET"));
         productDto.add(linkTo(methodOn(ProductController.class).create(productDto)).withRel("create").withType("POST"));
         productDto.add(linkTo(methodOn(ProductController.class).update(productDto.getId(), productDto)).withRel("update").withType("PUT"));
         productDto.add(linkTo(methodOn(ProductController.class).enableProduct(productDto.getId())).withRel("enable").withType("PATCH"));
