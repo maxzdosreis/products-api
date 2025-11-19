@@ -42,6 +42,20 @@ public class ProductController {
         return ResponseEntity.ok(productService.findAll(pageable));
     }
 
+    @GetMapping(value = "/findProductByName/{name}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    public ResponseEntity<PagedModel<EntityModel<ProductDto>>> findByName(
+            @PathVariable("name") String name,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "12") Integer size,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction
+    ) {
+        var sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC: Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "name"));
+        return ResponseEntity.ok(productService.findByName(name,pageable));
+    }
+
     @GetMapping(value = "/{id}",
         produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )

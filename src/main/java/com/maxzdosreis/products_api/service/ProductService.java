@@ -16,6 +16,7 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -70,6 +71,27 @@ public class ProductService {
                         String.valueOf(pageable.getSort())))
                 .withSelfRel();
         return assembler.toModel(productsWithLinks,findAllLink);
+    }
+
+    public PagedModel<EntityModel<ProductDto>> findByName(String name, Pageable pageable) {
+        logger.info("Finding Product by name: {}", name);
+
+        var productItem = productRepository.findProductByName(name, pageable);
+
+        var productWithLinks = productItem.map(product -> {
+            var dto = parseObject(product, ProductDto.class);
+            addHateoasLinks(dto);
+            return dto;
+        });
+
+        Link findByNameLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(ProductController.class)
+                .findByName(
+                        name,
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        String.valueOf(pageable.getSort())))
+                .withSelfRel();
+        return assembler.toModel(productWithLinks, findByNameLink);
     }
 
     public ProductDto updateProduct(Long id, ProductDto productDto) {
@@ -139,6 +161,7 @@ public class ProductService {
     private void addHateoasLinks(ProductDto productDto) {
         productDto.add(linkTo(methodOn(ProductController.class).findById(productDto.getId())).withSelfRel().withType("GET"));
         productDto.add(linkTo(methodOn(ProductController.class).findAll(1,12,"asc")).withRel("findAll").withType("GET"));
+        productDto.add(linkTo(methodOn(ProductController.class).findByName(productDto.getName(),1,12,"asc")).withRel("findByName").withType("GET"));
         productDto.add(linkTo(methodOn(ProductController.class).create(productDto)).withRel("create").withType("POST"));
         productDto.add(linkTo(methodOn(ProductController.class).update(productDto.getId(), productDto)).withRel("update").withType("PUT"));
         productDto.add(linkTo(methodOn(ProductController.class).enableProduct(productDto.getId())).withRel("enable").withType("PATCH"));
