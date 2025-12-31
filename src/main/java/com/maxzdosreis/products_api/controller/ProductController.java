@@ -13,6 +13,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/products")
@@ -26,6 +27,7 @@ public class ProductController {
         produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
         consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ProductDto> create(@Valid @RequestBody ProductDto productDto) {
         ProductDto product = productService.createProduct(productDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(product);
@@ -68,6 +70,7 @@ public class ProductController {
         produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
         consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ProductDto> update(@PathVariable("id") Long id, @Valid @RequestBody ProductDto productDto){
         ProductDto product = productService.updateProduct(id, productDto);
         return ResponseEntity.ok().body(product);
@@ -76,6 +79,7 @@ public class ProductController {
     @PatchMapping(value = "/{id}/enable",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ProductDto> enableProduct(@PathVariable("id") Long id) {
         var dto = productService.enableProduct(id);
         return ResponseEntity.ok().body(dto);
@@ -84,12 +88,14 @@ public class ProductController {
     @PatchMapping(value = "/{id}/disable",
         produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ProductDto> disableProduct(@PathVariable("id") Long id) {
         var dto = productService.disableProduct(id);
         return ResponseEntity.ok().body(dto);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<?> delete(@PathVariable("id") Long id){
         productService.delete(id);
         return ResponseEntity.noContent().build();
