@@ -1,7 +1,9 @@
 package com.maxzdosreis.products_api.controller;
 
 import com.maxzdosreis.products_api.controller.docs.AuthControllerDocs;
-import com.maxzdosreis.products_api.data.dto.security.AccountCredentialsDTO;
+import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
+import com.maxzdosreis.products_api.data.dto.security.SignInRequestDTO;
+import com.maxzdosreis.products_api.data.dto.security.SignUpRequestDTO;
 import com.maxzdosreis.products_api.serialization.converter.CustomMediaTypes;
 import com.maxzdosreis.products_api.service.AuthService;
 import com.maxzdosreis.products_api.service.UserService;
@@ -26,9 +28,12 @@ public class AuthController implements AuthControllerDocs {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/signin")
+    @PostMapping(value = "/signin",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
     @Override
-    public ResponseEntity<?> signin(@RequestBody AccountCredentialsDTO credentials) {
+    public ResponseEntity<?> signin(@Valid @RequestBody SignInRequestDTO credentials) {
         if(credentialsIsInvalid(credentials)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid client request!");
         var token = authService.signIn(credentials);
 
@@ -36,9 +41,14 @@ public class AuthController implements AuthControllerDocs {
         return ResponseEntity.ok().body(token);
     }
 
-    @PutMapping("/refresh/{username}")
+    @PutMapping(value = "/refresh/{username}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
     @Override
-    public ResponseEntity<?> refresh(@PathVariable("username") String username, @RequestHeader("Authorization") String refreshToken) {
+    public ResponseEntity<?> refresh(
+            @PathVariable("username") String username,
+            @RequestHeader("Authorization") String refreshToken
+    ) {
         if(parametersAreInvalid(username, refreshToken)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid client request!");
         var token = authService.refreshToken(username, refreshToken);
         if(token == null) ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid client request!");
@@ -50,7 +60,7 @@ public class AuthController implements AuthControllerDocs {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
     @Override
-    public AccountCredentialsDTO create(@Valid @RequestBody AccountCredentialsDTO credentials) {
+    public UserResponseDTO create(@Valid @RequestBody SignUpRequestDTO credentials) {
         return authService.create(credentials);
     }
 
@@ -84,7 +94,7 @@ public class AuthController implements AuthControllerDocs {
         return StringUtils.isBlank(username) || StringUtils.isBlank(refreshToken);
     }
 
-    private boolean credentialsIsInvalid(AccountCredentialsDTO credentials) {
+    private boolean credentialsIsInvalid(SignInRequestDTO credentials) {
         return credentials == null ||
                 StringUtils.isBlank(credentials.getPassword()) ||
                 StringUtils.isBlank(credentials.getUsername());

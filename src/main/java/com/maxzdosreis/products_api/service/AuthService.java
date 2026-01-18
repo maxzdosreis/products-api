@@ -1,6 +1,8 @@
 package com.maxzdosreis.products_api.service;
 
-import com.maxzdosreis.products_api.data.dto.security.AccountCredentialsDTO;
+import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
+import com.maxzdosreis.products_api.data.dto.security.SignInRequestDTO;
+import com.maxzdosreis.products_api.data.dto.security.SignUpRequestDTO;
 import com.maxzdosreis.products_api.data.dto.security.TokenDTO;
 import com.maxzdosreis.products_api.exception.RequiredObjectIsNullException;
 import com.maxzdosreis.products_api.model.User;
@@ -12,15 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -44,13 +43,18 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     // Método que autentica o usuário
-    public ResponseEntity<TokenDTO> signIn(AccountCredentialsDTO credentials) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        credentials.getUsername(),
-                        credentials.getPassword()
-                )
-        );
+    public ResponseEntity<TokenDTO> signIn(SignInRequestDTO credentials) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            credentials.getUsername(),
+                            credentials.getPassword()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+            logger.warn("Tentativa de login falhou para usuário: {}", credentials.getUsername());
+            throw new BadCredentialsException("Usuário ou senha inválidos!");
+        }
 
         var user = userRepository.findByUsername(credentials.getUsername());
         if (user == null) {
@@ -63,11 +67,13 @@ public class AuthService {
                 user.getRoles()
         );
 
+        logger.info("Usuário autenticado com sucesso: {}", credentials.getUsername());
+
         // Retorna o access token
         return ResponseEntity.ok(token);
     }
 
-    // Método que atualiza o token
+    // Método que renova o token
     public ResponseEntity<TokenDTO> refreshToken(String username, String refreshToken){
         var user = userRepository.findByUsername(username);
         TokenDTO token;
@@ -80,6 +86,7 @@ public class AuthService {
         return ResponseEntity.ok(token);
     }
 
+    /*
     // Método que gera uma senha criptograda
     private String generateHashedPassword(String password) {
 
@@ -101,20 +108,32 @@ public class AuthService {
         return passwordEncoder.encode(password);
 
     }
+     */
 
     // Método que cria um novo usuário no sistema
-    public AccountCredentialsDTO create(AccountCredentialsDTO user) {
+    public UserResponseDTO create(SignUpRequestDTO request) {
 
         // Valida se o objeto user não é nulo
-        if(user == null) throw new RequiredObjectIsNullException();
+        if(request == null) throw new RequiredObjectIsNullException();
 
-        logger.info("Creating one new User!");
+        logger.info("Criando novo usuário: {}", request.getUsername());
+
+        if (userRepository.findByUsername(request.getUsername()) != null) {
+            logger.warn("Tentativa de criar usuário com username já existente: {}", request.getUsername());
+            throw new IllegalArgumentException("Username já está em uso!");
+        }
+
+        if(userRepository.findByEmail(request.getEmail()) != null) {
+            logger.warn("Tentativa de criar usuário com email já existente: {}", request.getEmail());
+            throw new IllegalArgumentException("Email já está em uso!");
+        }
+
         // Preenche os dados básicos do usuário
         var entity = new User();
-        entity.setFullName(user.getFullname());
-        entity.setUserName(user.getUsername());
-        entity.setEmail(user.getEmail());
-        entity.setPassword(passwordEncoder.encode(user.getPassword()));
+        entity.setFullName(request.getFullname());
+        entity.setUserName(request.getUsername());
+        entity.setEmail(request.getEmail());
+        entity.setPassword(passwordEncoder.encode(request.getPassword()));
         entity.setAccountNonExpired(true);
         entity.setAccountNonLocked(true);
         entity.setCredentialsNonExpired(true);
@@ -126,9 +145,17 @@ public class AuthService {
         entity.setPermissions(Set.of(defaultPermission));
 
         // Salva o usuário no banco de dados
-        var dto = userRepository.save(entity);
+        var savedUser = userRepository.save(entity);
+
+        logger.info("Usuário criado com sucesso: {} (ID: {})", savedUser.getUsername(), savedUser.getId());
 
         // Retorna um DTO com os dados do usuário criado
-        return new AccountCredentialsDTO(dto.getUsername(), dto.getPassword(), dto.getFullName(), dto.getEmail());
+        return new UserResponseDTO(
+                savedUser.getId(),
+                savedUser.getUsername(),
+                savedUser.getFullName(),
+                savedUser.getEmail(), 
+                savedUser.getEnabled()
+        );
     }
 }
