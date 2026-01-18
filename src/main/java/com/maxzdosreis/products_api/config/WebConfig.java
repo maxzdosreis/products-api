@@ -16,19 +16,6 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${cors.originPatterns:default}")
-    private String corsOriginPatterns = "";
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        var allowedOrigins = corsOriginPatterns.split(",");
-        registry.addMapping("/**")
-                .allowedOrigins(allowedOrigins)
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true);
-    }
-
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
         configurer.favorParameter(false)
@@ -36,7 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .useRegisteredExtensionsOnly(false)
                 .defaultContentType(MediaType.APPLICATION_JSON)
                     .mediaType("json", MediaType.APPLICATION_JSON)
-                    // adicionado as extensões xml e yaml, para no futuro produzir ou consumir outras exntensões além de json
+                    // adicionado as extensões xml e yaml, para no futuro produzir ou consumir outras extensões além de json
                     .mediaType("xml", MediaType.APPLICATION_XML)
                     .mediaType("yaml", CustomMediaTypes.APPLICATION_YAML);
     }
