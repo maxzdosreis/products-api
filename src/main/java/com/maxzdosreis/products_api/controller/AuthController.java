@@ -2,10 +2,8 @@ package com.maxzdosreis.products_api.controller;
 
 import com.maxzdosreis.products_api.controller.docs.AuthControllerDocs;
 import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
-import com.maxzdosreis.products_api.data.dto.security.AccountCredentialsDTO;
 import com.maxzdosreis.products_api.data.dto.security.SignInRequestDTO;
 import com.maxzdosreis.products_api.data.dto.security.SignUpRequestDTO;
-import com.maxzdosreis.products_api.model.User;
 import com.maxzdosreis.products_api.serialization.converter.CustomMediaTypes;
 import com.maxzdosreis.products_api.service.AuthService;
 import com.maxzdosreis.products_api.service.UserService;

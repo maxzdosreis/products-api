@@ -1,7 +1,6 @@
 package com.maxzdosreis.products_api.controller.docs;
 
 import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
-import com.maxzdosreis.products_api.data.dto.security.AccountCredentialsDTO;
 import com.maxzdosreis.products_api.data.dto.security.SignInRequestDTO;
 import com.maxzdosreis.products_api.data.dto.security.SignUpRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
