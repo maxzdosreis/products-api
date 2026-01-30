@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.TooManyListenersException;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class PasswordResetService {
@@ -48,14 +49,8 @@ public class PasswordResetService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    @Value("${app.password-reset.max-attemps-per-hour:3}")
-    private int maxAttempsPerHour;
-
-    public void initiatePasswordReset(String email) throws TooManyResetAttempsException {
+    public void initiatePasswordReset(String email) {
         logger.info("Iniciando reset de senha para email: {}", email);
-
-        // verificar o limite de tentativas
-        checkResetAttempLimit(email);
 
         User user = userRepository.findByEmail(email);
         if(user == null) {
@@ -79,33 +74,30 @@ public class PasswordResetService {
             tokenRepository.save(resetToken);
 
             // Envia email assíncrono
-            sendResetEmailAsync(email, token, user.getFullName());
-            logger.info("Token de reset criado com sucesso para: {}", email);
+            CompletableFuture<Boolean> emailSent = sendResetEmailAsync(email, token, user.getFullName());
+
+            emailSent.thenAccept(success -> {
+                if (success) {
+                    logger.info("Email de reset enviado com sucesso para {}", email);
+                } else {
+                    logger.error("Falha ao enviar email de reset para: {}", email);
+                }
+            });
         } catch (Exception e) {
             logger.error("Erro ao criar token de reset para {}: {}", email, e.getMessage());
             throw new EmailServiceException("Erro ao processar solicitação de reset", e);
         }
     }
 
-    // verifica o limite de tentativas por hora
-    private void checkResetAttempLimit(String email) throws TooManyResetAttempsException {
-        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
-        long recentAttemps = tokenRepository.countRecentTokenByEmail(email, oneHourAgo);
-
-        if (recentAttemps >= maxAttempsPerHour) {
-            logger.warn("Muitas tentativas de reset para email: {} ({})", email, recentAttemps);
-            throw new TooManyResetAttempsException();
-        }
-    }
-
     // Envia email de reset de forma assíncrona
     @Async("emailTaskExecutor")
-    public void sendResetEmailAsync(String email, String token, String fullName) {
+    public CompletableFuture<Boolean> sendResetEmailAsync(String email, String token, String fullName) {
         try {
             sendResetEmail(email, token, fullName);
+            return CompletableFuture.completedFuture(true);
         } catch (Exception e) {
             logger.error("Erro ao enviar email de reset para {}: {}", email, e.getMessage());
-            throw new EmailServiceException("Erro ao enviar email de reset", e);
+            return CompletableFuture.completedFuture(false);
         }
     }
 
@@ -207,12 +199,18 @@ public class PasswordResetService {
 
     // Faz a limpeza automática dos tokens expirados
     @Transactional
-    public void cleanExpiredTokens() {
+    public void cleanExpiredTokens(LocalDateTime cutoffTime) {
         try {
-            tokenRepository.deleteExpiredTokens(LocalDateTime.now());
-            logger.info("Tokens removidas com sucesso: {}", tokenRepository.findAll().size());
+            tokenRepository.deleteExpiredTokens(cutoffTime);
+            logger.info("Limpeza de tokens expirados concluída. Cutoff: {}", cutoffTime);
         } catch (Exception e) {
-            logger.error("Erro ao remover tokens com sucesso: {}", e.getMessage());
+            logger.error("Erro ao remover tokens expirados: {}", e.getMessage());
         }
+    }
+
+    @Transactional
+    public void cleanExpiredToken() {
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1);
+        cleanExpiredTokens(cutoffTime);
     }
 }
