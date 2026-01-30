@@ -209,7 +209,7 @@ public class PasswordResetService {
     }
 
     @Transactional
-    public void cleanExpiredToken() {
+    public void cleanExpiredTokens() {
         LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1);
         cleanExpiredTokens(cutoffTime);
     }
