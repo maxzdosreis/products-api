@@ -5,9 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class SimpleRateLimitService {
@@ -16,12 +19,36 @@ public class SimpleRateLimitService {
 
     // Classe interna para armazenar informações de rate limit
     private static class RateLimitInfo {
-        int requestCount; // Requisições feitas
-        LocalDateTime windowStart; // Começo da janela de tempo
+        private final AtomicInteger requestCount;
+        private volatile Instant windowStart;
 
         RateLimitInfo() {
-            this.requestCount = 0;
-            this.windowStart = LocalDateTime.now();
+            this.requestCount = new AtomicInteger(0);
+            this.windowStart = Instant.now();
+        }
+
+        // Método synchronized para evitar race conditions
+        public synchronized boolean checkAndIncrement(int maxRequests, Duration windowDuration) {
+            Instant now = Instant.now();
+            Instant windowEnd = windowStart.plus(windowDuration);
+
+            if(now.isAfter(windowEnd)) {
+                requestCount.set(1);
+                windowStart = now;
+                return true;
+            }
+
+            // Incrementa de forma atômica
+            int current = requestCount.incrementAndGet();
+            return current <= maxRequests;
+        }
+
+        public int getCurrentCount() {
+            return requestCount.get();
+        }
+
+        public Instant getWindowStart() {
+            return windowStart;
         }
     }
 
@@ -30,33 +57,24 @@ public class SimpleRateLimitService {
 
     // Verifica se uma requisição deve ser permitida
     // Ex: allowRequest("192.168.1.1:auth", 5, 1)
+    // 30/01/2025: Simplifica e aplica thread-safe
     public boolean allowRequest(String key, int maxRequests, int windowMinutes) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
         // Busca ou cria informações para esta chave, se não existir, cria um novo RateLimitInfo
         RateLimitInfo info = rateLimitMap.computeIfAbsent(key, k -> new RateLimitInfo());
 
-        // Calcula quando a janela de tempo expira
-        LocalDateTime windowEnd = info.windowStart.plusMinutes(windowMinutes);
+        // Calcula quando a janela de tempo dura
+        Duration windowDuration = Duration.ofMinutes(windowMinutes);
+        boolean allowed = info.checkAndIncrement(maxRequests, windowDuration);
 
-        // Se expirou, reseta o contador
-        if(now.isAfter(windowEnd)) {
-            logger.debug("Janela expirou para {}. Resetando contador.", key);
-            info.requestCount = 1;
-            info.windowStart = now;
-            return true;
+        if(!allowed) {
+            logger.warn("Rate limit excedido para {}. Tentativa: {}/{}", key, info.getCurrentCount(), maxRequests);
+        } else {
+            logger.debug("Requisição permitida para {}. Uso: {}/{}", key, info.getCurrentCount(), maxRequests);
         }
 
-        info.requestCount++;
-
-        // Verifica se excedeu o limite
-        if(info.requestCount > maxRequests) {
-            logger.warn("Rate limit excedido para {}. Tentativa: {}/{}", key, info.requestCount, maxRequests);
-            return false; // BLOQUEADO!
-        }
-
-        logger.debug("Requisição permmitida para {}. Uso: {}/{}", key, info.requestCount, maxRequests);
-        return true; // PERMITIDO!
+        return allowed;
     }
 
     // Autenticação (login/refresh): 5 requisições por minuto
@@ -79,19 +97,20 @@ public class SimpleRateLimitService {
         return allowRequest(ip + ":api", 100, 1);
     }
 
-    // Obtém informações de uso atual
+    // Retorna informações detalhadas
     public String getRateLimitInfo(String key) {
         RateLimitInfo info = rateLimitMap.get(key);
         if(info == null) {
-            return null;
+            return "Nenhuma requisição registrada para: " + key;
         }
-        return String.format("Requisições: %d, Janela iniciou: %s", info.requestCount, info.windowStart);
+        return String.format("Requisições: %d, Janela iniciou: %s", info.getCurrentCount(), info.getWindowStart());
     }
 
     // Limpa entradas antigas do Map periodicamente
-    @Scheduled(cron = "0 0 * * * ?") // Executa automaticamente a cada 1 hora
+    // 30/01/2025: Limpeza mais agressiva para evitar memory leak
+    @Scheduled(fixedRate = 3600000) // Executa automaticamente a cada 1 hora
     public void cleanupOldEntries() {
-        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(5);
+        Instant cutoff = Instant.now().minus(Duration.ofHours(2));
         int sizeBefore = rateLimitMap.size();
 
         // Remove entradas cuja janela começou há mais de 2 horas

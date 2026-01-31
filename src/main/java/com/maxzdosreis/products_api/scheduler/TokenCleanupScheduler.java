@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class TokenCleanupScheduler {
 
@@ -15,22 +17,24 @@ public class TokenCleanupScheduler {
     @Autowired
     private PasswordResetService passwordResetService;
 
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 0 3 * * ?")
     public void cleanupExpiredTokensDaily() {
         logger.info("Iniciando limpeza diária de tokens expirados");
         try {
-            passwordResetService.cleanExpiredTokens();
+            LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1);
+            passwordResetService.cleanExpiredTokens(cutoffTime);
             logger.info("Limpeza diária de tokens expirados concluída com sucesso");
         } catch (Exception e) {
             logger.error("Erro durante limpeza diária de tokens expirados: {}", e.getMessage());
         }
     }
 
-    @Scheduled(fixedRate = 6 * 60 * 60 * 1000)
+    @Scheduled(fixedRate = 12 * 60 * 60 * 1000) // 12 horas
     public void cleanupExpiredTokensFrequent() {
         logger.info("Executando limpeza frequente de tokens expirados");
         try {
-            passwordResetService.cleanExpiredTokens();
+            LocalDateTime cutoffTime = LocalDateTime.now().minusHours(1);
+            passwordResetService.cleanExpiredTokens(cutoffTime);
         } catch (Exception e) {
             logger.error("Erro durante limpeza frequente de tokens expirados: {}", e.getMessage());
         }

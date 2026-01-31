@@ -25,11 +25,8 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM PasswordResetToken p WHERE p.expiryDate < :now")
-    void deleteExpiredTokens(@Param("now") LocalDateTime now);
+    @Query("DELETE FROM PasswordResetToken p WHERE p.expiryDate < :cutoffTime")
+    void deleteExpiredTokens(@Param("cutoffTime") LocalDateTime cutoffTime);
 
     boolean existsByTokenAndUsedFalse(String token);
-
-    @Query("SELECT COUNT(p) FROM PasswordResetToken p WHERE p.email = :email AND p.createdAt > :since")
-    long countRecentTokenByEmail(@Param("email") String email, @Param("since") LocalDateTime since);
 }
