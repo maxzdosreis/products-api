@@ -36,6 +36,10 @@ public class User implements UserDetails, Serializable {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
+    @Pattern(
+        regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+        message = "Email must have a valid format"
+    )
     @Size(max = 100, message = "Email must not exceed 100 characters")
     @Column(name = "email", unique = true, nullable = false, length = 100)
     private String email;

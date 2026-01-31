@@ -2,6 +2,7 @@ package com.maxzdosreis.products_api.data.dto.security;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -30,6 +31,10 @@ public class SignUpRequestDTO implements Serializable {
 
     @NotBlank(message = "Email é obrigatório")
     @Email(message = "Email deve ser válido")
+    @Pattern(
+        regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+        message = "Email deve ter um formato válido (ex: usuario@dominio.com"
+    )
     @Size(max = 100, message = "Email não pode exceder 100 caracteres")
     private String email;
 }
