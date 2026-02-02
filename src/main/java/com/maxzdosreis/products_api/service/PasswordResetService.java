@@ -43,7 +43,7 @@ public class PasswordResetService {
     @Value("${app.password-reset.token-expiry-hours}")
     private int tokenExpiryHours;
 
-    @Value("${app.password-reset.base-url:http://localhost}")
+    @Value("${app.password-reset.base-url}")
     private String baseUrl;
 
     @Value("${spring.mail.username}")

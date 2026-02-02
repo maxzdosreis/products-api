@@ -6,6 +6,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,11 +20,31 @@ import java.util.*;
 @RestControllerAdvice
 public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public final ResponseEntity<ExceptionResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+        ExceptionResponse response = new ExceptionResponse(
+                new Date(),
+                "Credenciais inválidas",
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public final ResponseEntity<ExceptionResponse> handleUsernameNotFoundException(UsernameNotFoundException ex, WebRequest request) {
+        ExceptionResponse response = new ExceptionResponse(
+                new Date(),
+                "Credenciais inválidas",
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(Exception.class)
     public final ResponseEntity<ExceptionResponse> handleAllExceptions(Exception ex, WebRequest request) {
         ExceptionResponse response = new ExceptionResponse(
                 new Date(),
-                ex.getMessage(),
+                "Erro interno do servidor",
                 request.getDescription(false)
         );
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -70,22 +92,11 @@ public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler 
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public final ResponseEntity<ExceptionResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
-        String message = "Erro de integridade de dados";
-
-        String exceptionMessage = ex.getMessage();
-        if(exceptionMessage != null) {
-            if(exceptionMessage.contains("chk_price_positive")) {
-                message = "Preço deve ser maior que zero";
-            } else if (exceptionMessage.contains("Duplicate entry") ||
-                    exceptionMessage.contains("unique") ||
-                    exceptionMessage.contains("UNIQUE")) {
-                message = "Já existe um produto com este nome";
-            }
-        }
+        String message = "Dados inválidos";
 
         ExceptionResponse response = new ExceptionResponse(
                 new Date(),
-                ex.getMessage(),
+                message,
                 request.getDescription(false)
         );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -117,7 +128,7 @@ public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler 
     public final ResponseEntity<ExceptionResponse> handleInvalidJwtAuthenticationExceptions(Exception ex, WebRequest request){
         ExceptionResponse response = new ExceptionResponse(
                 new Date(),
-                ex.getMessage(),
+                "Token inválido",
                 request.getDescription(false)
         );
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
@@ -157,7 +168,7 @@ public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler 
     public final ResponseEntity<ExceptionResponse> handleEmailServiceExceptions(Exception ex, WebRequest request) {
         ExceptionResponse response = new ExceptionResponse(
                 new Date(),
-                ex.getMessage(),
+                "Erro ao enviar email",
                 request.getDescription(false)
         );
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
