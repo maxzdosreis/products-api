@@ -43,6 +43,8 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private static final int LOGIN_DELAY_MS = 1000; // 1 segundo
+
     // Método que autentica o usuário
     public ResponseEntity<TokenDTO> signIn(SignInRequestDTO credentials) {
         try {
@@ -70,14 +72,15 @@ public class AuthService {
 
             // Retorna o access token
             return ResponseEntity.ok(token);
-        } catch (BadCredentialsException e) {
-            logger.warn("Tentativa de autenticação falhou para usuário: {}", credentials.getUsername());
-            throw new BadCredentialsException("Credenciais inválidas");
-        }  catch (UsernameNotFoundException e) {
-            logger.warn("Tentativa de autenticação com usuário inexistente");
-            throw new BadCredentialsException("Credenciais inválidas");
         } catch (AuthenticationException e) {
-            logger.error("Erro na autenticação: {}", e.getClass().getSimpleName());
+            // Delay proposital para dificultar brute force
+            try {
+                Thread.sleep(LOGIN_DELAY_MS);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+
+            logger.error("Tentativa de autenticação falhou");
             throw new BadCredentialsException("Credenciais inválidas");
         }
     }
