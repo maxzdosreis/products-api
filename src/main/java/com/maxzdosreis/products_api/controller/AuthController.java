@@ -36,10 +36,8 @@ public class AuthController implements AuthControllerDocs {
     )
     @Override
     public ResponseEntity<?> signin(@Valid @RequestBody SignInRequestDTO credentials) {
-        if(credentialsIsInvalid(credentials)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid client request!");
+        if(credentialsIsInvalid(credentials)) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Requisição inválida");
         var token = authService.signIn(credentials);
-
-        if(token == null) ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid client request!");
         return ResponseEntity.ok().body(token);
     }
 
@@ -53,9 +51,8 @@ public class AuthController implements AuthControllerDocs {
             @PathVariable("username") String username,
             @RequestHeader("Authorization") String refreshToken
     ) {
-        if(parametersAreInvalid(username, refreshToken)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid client request!");
+        if(parametersAreInvalid(username, refreshToken)) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Requisição inválida");
         var token = authService.refreshToken(username, refreshToken);
-        if(token == null) ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid client request!");
         return ResponseEntity.ok().body(token);
     }
 

@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,39 +52,52 @@ public class AuthService {
                             credentials.getPassword()
                     )
             );
+
+            var user = userRepository.findByUsername(credentials.getUsername());
+
+            if (user == null) {
+                logger.error("CRITICAL: Usuário autenticado não encontrado no banco de dados: {}", credentials.getUsername());
+                throw new BadCredentialsException("Credenciais inválidas");
+            }
+
+            // Cria o access token para o usuário
+            var token = tokenProvider.createAccessToken(
+                    credentials.getUsername(),
+                    user.getRoles()
+            );
+
+            logger.info("Usuário autenticado com sucesso: {}", credentials.getUsername());
+
+            // Retorna o access token
+            return ResponseEntity.ok(token);
         } catch (BadCredentialsException e) {
-            logger.warn("Tentativa de login falhou para usuário: {}", credentials.getUsername());
-            throw new BadCredentialsException("Usuário ou senha inválidos!");
+            logger.warn("Tentativa de autenticação falhou para usuário: {}", credentials.getUsername());
+            throw new BadCredentialsException("Credenciais inválidas");
+        }  catch (UsernameNotFoundException e) {
+            logger.warn("Tentativa de autenticação com usuário inexistente");
+            throw new BadCredentialsException("Credenciais inválidas");
+        } catch (AuthenticationException e) {
+            logger.error("Erro na autenticação: {}", e.getClass().getSimpleName());
+            throw new BadCredentialsException("Credenciais inválidas");
         }
-
-        var user = userRepository.findByUsername(credentials.getUsername());
-        if (user == null) {
-            throw new UsernameNotFoundException("Username " + credentials.getUsername() + " not found!");
-        }
-
-        // Cria o access token para o usuário
-        var token = tokenProvider.createAccessToken(
-                credentials.getUsername(),
-                user.getRoles()
-        );
-
-        logger.info("Usuário autenticado com sucesso: {}", credentials.getUsername());
-
-        // Retorna o access token
-        return ResponseEntity.ok(token);
     }
 
     // Método que renova o token
     public ResponseEntity<TokenDTO> refreshToken(String username, String refreshToken){
-        var user = userRepository.findByUsername(username);
-        TokenDTO token;
-        // Verifica se o usuário pelo username se é nulo, se não for atualiza o token, se for retorna uma exception
-        if (user != null) {
-            token = tokenProvider.refreshToken(refreshToken);
-        }else{
-            throw new UsernameNotFoundException("Username " + username + " not found!");
+        try {
+           var user = userRepository.findByUsername(username);
+
+           if(user == null) {
+               logger.warn("Tentativa de refresh com usuário inexistente");
+               throw new BadCredentialsException("Token inválido");
+           }
+
+           TokenDTO token = tokenProvider.refreshToken(refreshToken);
+           return ResponseEntity.ok(token);
+        } catch (Exception e) {
+            logger.error("Erro ao renovar token: {}", e.getClass().getSimpleName());
+            throw new BadCredentialsException("Token inválido");
         }
-        return ResponseEntity.ok(token);
     }
 
     /*
@@ -120,12 +134,12 @@ public class AuthService {
 
         if (userRepository.findByUsername(request.getUsername()) != null) {
             logger.warn("Tentativa de criar usuário com username já existente: {}", request.getUsername());
-            throw new IllegalArgumentException("Username já está em uso!");
+            throw new IllegalArgumentException("Dados inválidos para registro");
         }
 
         if(userRepository.findByEmail(request.getEmail()) != null) {
             logger.warn("Tentativa de criar usuário com email já existente: {}", request.getEmail());
-            throw new IllegalArgumentException("Email já está em uso!");
+            throw new IllegalArgumentException("Dados inválidos para registro");
         }
 
         // Preenche os dados básicos do usuário
