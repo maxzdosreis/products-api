@@ -40,10 +40,10 @@ public class PasswordResetService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Value("${app.password-reset.token-expiry-hours:1}")
+    @Value("${app.password-reset.token-expiry-hours}")
     private int tokenExpiryHours;
 
-    @Value("${app.password-reset.base-url:http://localhost:80}")
+    @Value("${app.password-reset.base-url:http://localhost}")
     private String baseUrl;
 
     @Value("${spring.mail.username}")

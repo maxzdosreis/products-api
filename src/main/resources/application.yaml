@@ -1,12 +1,15 @@
 server:
   port: 80
+
 cors:
-  originPatterns: http://localhost:8080,http://localhost:3000
+  originPatterns: ${CORS_ORIGINS:http://localhost:3000}
+
 security:
   jwt:
     token:
-      secret-key: 53cr37
-      expire-length: 3600000
+      secret-key: ${JWT_SECRET_KEY}
+      expire-length: ${JWT_EXPIRATION:3600000}
+
 spring:
   application:
     name: products-api
@@ -42,9 +45,16 @@ spring:
     scheduling:
       pool:
         size: 2
+
+app:
+  password-reset:
+    token-expiry-hours: ${PASSWORD_RESET_TOKEN_EXPIRY_HOURS:1}
+    base-url: ${PASSWORD_RESET_BASE_URL:http://localhost:80}
+
 logging:
   level:
     com.maxzdosreis: DEBUG
+
 spring-doc:
   paths-to-match:
     - /auth/**
