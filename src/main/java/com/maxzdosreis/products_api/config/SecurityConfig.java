@@ -104,19 +104,22 @@ public class SecurityConfig {
                         authorizeHttpRequests -> authorizeHttpRequests
                                 .requestMatchers(
                                         "/auth/signin",
+                                        "/auth/signup",
+                                        "/auth/refresh/**",
                                         "/auth/forgot-password",
                                         "/auth/reset-password",
-                                        "/auth/refresh/**",
-                                        "/auth/createUser",
                                         "/swagger-ui/**",
                                         "/v3/api-docs/**"
                                 ).permitAll()
-                                .requestMatchers("/auth/createUser").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/api/**").hasAnyRole("ADMIN", "MANAGER")
-                                .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("ADMIN", "MANAGER")
-                                .requestMatchers(HttpMethod.PATCH, "/api/**").hasAnyRole("ADMIN", "MANAGER")
-                                .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "MANAGER", "USER")
+                                // Regra para endpoints de gerenciamento de usuários
+                                .requestMatchers("/api/users/**").hasRole("ADMIN")
+
+                                // Regras para endpoints de produtos
+                                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/products/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.GET, "/api/products/**").hasAnyRole("ADMIN", "MANAGER", "USER")
                                 .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
