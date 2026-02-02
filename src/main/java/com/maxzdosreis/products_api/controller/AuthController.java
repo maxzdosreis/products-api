@@ -28,6 +28,8 @@ public class AuthController implements AuthControllerDocs {
     @Autowired
     private UserService userService;
 
+    // Autentica um usuário e retorna tokens JWT
+    // POST /auth/signin
     @PostMapping(value = "/signin",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
@@ -41,6 +43,8 @@ public class AuthController implements AuthControllerDocs {
         return ResponseEntity.ok().body(token);
     }
 
+    // Renova o access token usando refresh token
+    // PUT /auth/refresh/{username}
     @PutMapping(value = "/refresh/{username}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
@@ -55,40 +59,19 @@ public class AuthController implements AuthControllerDocs {
         return ResponseEntity.ok().body(token);
     }
 
-    @PostMapping(value = "/createUser",
+    // Registra novo usuário no sistema, caso ainda não tenha
+    // POST /auth/signup
+    @PostMapping(value = "/signup",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
     @Override
-    public UserResponseDTO create(@Valid @RequestBody SignUpRequestDTO credentials) {
-        return authService.create(credentials);
+    public ResponseEntity<UserResponseDTO> signup(@Valid @RequestBody SignUpRequestDTO credentials) {
+        UserResponseDTO user = authService.create(credentials);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @PutMapping("/users/{id}/permissions")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> addPermission(
-            @PathVariable Long id,
-            @RequestParam String permission
-    ) {
-        userService.addPermissionToUser(id, permission);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/users/{id}/permissions")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> removePermission(
-            @PathVariable("id") Long id,
-            @RequestParam String permission
-    ) {
-        userService.removePermissionToUser(id, permission);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/users/{id}/permissions")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<String>> listPermissions(@PathVariable("id") Long id){
-        return ResponseEntity.ok(userService.listPermissionsToUser(id));
-    }
+    // Métodos auxiliares
 
     private boolean parametersAreInvalid(String username, String refreshToken) {
         return StringUtils.isBlank(username) || StringUtils.isBlank(refreshToken);
