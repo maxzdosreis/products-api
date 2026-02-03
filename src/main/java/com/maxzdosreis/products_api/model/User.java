@@ -26,28 +26,15 @@ public class User implements UserDetails, Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     @Column(name = "user_name", unique = true, nullable = false, length = 50)
     private String userName;
 
-    @NotBlank(message = "Full name is required")
-    @Size(min = 3, max = 100, message = "Full name must be between 3 and 100 characters")
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
-    @Pattern(
-        regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
-        message = "Email must have a valid format"
-    )
-    @Size(max = 100, message = "Email must not exceed 100 characters")
     @Column(name = "email", unique = true, nullable = false, length = 100)
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
     @Column(nullable = false)
     private String password;
 
@@ -66,7 +53,6 @@ public class User implements UserDetails, Serializable {
     @Builder.Default
     private Boolean credentialsNonExpired = true;
 
-    @NotNull(message = "Enabled status is required")
     @Column(nullable = false)
     @Builder.Default
     private Boolean enabled = true;
