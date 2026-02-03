@@ -13,7 +13,9 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @EqualsAndHashCode
+@ToString
 public class TokenDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;

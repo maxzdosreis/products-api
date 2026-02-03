@@ -12,7 +12,9 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
+@Builder
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = "token")
 public class PasswordResetToken implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -31,6 +33,7 @@ public class PasswordResetToken implements Serializable {
     private LocalDateTime expiryDate;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean used = false;
 
     @Column(name = "created_at", nullable = false)

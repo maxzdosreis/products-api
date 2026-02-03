@@ -2,17 +2,17 @@ package com.maxzdosreis.products_api.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "products", uniqueConstraints = @UniqueConstraint(columnNames = "name"))
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(of = "id")
+@ToString
 public class Product {
 
     @Id
@@ -40,5 +40,6 @@ public class Product {
     private Integer quantity;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean enabled = true;
 }

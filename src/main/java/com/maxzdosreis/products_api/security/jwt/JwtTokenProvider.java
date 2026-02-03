@@ -59,7 +59,14 @@ public class JwtTokenProvider {
         // Gera o refresh token
         String refreshToken = getRefreshToken(username, roles, now);
 
-        return new TokenDTO(username, true, now, validity, accessToken, refreshToken);
+        return TokenDTO.builder()
+                .username(username)
+                .authenticated(true)
+                .created(now)
+                .expiration(validity)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     // Renova o access token usando um refresh token válido
