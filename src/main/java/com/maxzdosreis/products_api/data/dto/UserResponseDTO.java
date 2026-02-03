@@ -10,7 +10,9 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @EqualsAndHashCode
+@ToString
 @JsonPropertyOrder({"id", "username", "fullname", "email", "enabled"})
 public class UserResponseDTO implements Serializable {
 

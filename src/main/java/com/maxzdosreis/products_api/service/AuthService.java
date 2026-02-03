@@ -145,21 +145,18 @@ public class AuthService {
             throw new IllegalArgumentException("Dados inválidos para registro");
         }
 
-        // Preenche os dados básicos do usuário
-        var entity = new User();
-        entity.setFullName(request.getFullname());
-        entity.setUserName(request.getUsername());
-        entity.setEmail(request.getEmail());
-        entity.setPassword(passwordEncoder.encode(request.getPassword()));
-        entity.setAccountNonExpired(true);
-        entity.setAccountNonLocked(true);
-        entity.setCredentialsNonExpired(true);
-        entity.setEnabled(true);
-
         var defaultPermission = permissionRepository
                 .findByDescription("ROLE_USER")
                 .orElseThrow(() -> new RuntimeException("Default role not found!"));
-        entity.setPermissions(Set.of(defaultPermission));
+
+        // Preenche os dados básicos do usuário
+        var entity = User.builder()
+                .userName(request.getUsername())
+                .fullName(request.getFullname())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .permissions(Set.of(defaultPermission))
+                .build();
 
         // Salva o usuário no banco de dados
         var savedUser = userRepository.save(entity);
@@ -167,12 +164,12 @@ public class AuthService {
         logger.info("Usuário criado com sucesso: {} (ID: {})", savedUser.getUsername(), savedUser.getId());
 
         // Retorna um DTO com os dados do usuário criado
-        return new UserResponseDTO(
-                savedUser.getId(),
-                savedUser.getUsername(),
-                savedUser.getFullName(),
-                savedUser.getEmail(), 
-                savedUser.getEnabled()
-        );
+        return UserResponseDTO.builder()
+                .id(savedUser.getId())
+                .username(savedUser.getUsername())
+                .fullname(savedUser.getFullName())
+                .email(savedUser.getEmail())
+                .enabled(savedUser.getEnabled())
+                .build();
     }
 }

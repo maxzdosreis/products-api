@@ -15,7 +15,9 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
+@Builder
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = {"password", "permissions"})
 public class User implements UserDetails, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -51,19 +53,23 @@ public class User implements UserDetails, Serializable {
 
     @NotNull(message = "Account expiration status is required")
     @Column(name = "account_non_expired", nullable = false)
-    private Boolean accountNonExpired;
+    @Builder.Default
+    private Boolean accountNonExpired = true;
 
     @NotNull(message = "Account lock status is required")
     @Column(name = "account_non_locked", nullable = false)
-    private Boolean accountNonLocked;
+    @Builder.Default
+    private Boolean accountNonLocked = true;
 
     @NotNull(message = "Credentials expiration status is required")
     @Column(name = "credentials_non_expired", nullable = false)
-    private Boolean credentialsNonExpired;
+    @Builder.Default
+    private Boolean credentialsNonExpired = true;
 
     @NotNull(message = "Enabled status is required")
     @Column(nullable = false)
-    private Boolean enabled;
+    @Builder.Default
+    private Boolean enabled = true;
 
     @NotEmpty(message = "User must have at least one permission")
     @ManyToMany(fetch = FetchType.EAGER)
@@ -71,6 +77,7 @@ public class User implements UserDetails, Serializable {
             joinColumns = {@JoinColumn (name = "id_user")},
             inverseJoinColumns = {@JoinColumn (name = "id_permission")}
     )
+    @Builder.Default
     private Set<Permission> permissions = new HashSet<>();
 
     public List<String> getRoles() {

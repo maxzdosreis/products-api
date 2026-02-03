@@ -10,7 +10,9 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @EqualsAndHashCode
+@ToString
 public class SignInRequestDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;

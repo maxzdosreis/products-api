@@ -64,11 +64,11 @@ public class PasswordResetService {
 
             // Cria novo token
             String token = UUID.randomUUID().toString();
-            PasswordResetToken resetToken = new PasswordResetToken();
-            resetToken.setToken(token);
-            resetToken.setEmail(email);
-            resetToken.setExpiryDate(LocalDateTime.now().plusHours(tokenExpiryHours));
-            resetToken.setUsed(false);
+            PasswordResetToken resetToken = PasswordResetToken.builder()
+                    .token(token)
+                    .email(email)
+                    .expiryDate(LocalDateTime.now().plusHours(tokenExpiryHours))
+                    .build();
 
             // Salva o novo token
             tokenRepository.save(resetToken);
