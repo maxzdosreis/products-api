@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
@@ -38,8 +40,8 @@ public interface UserControllerDocs {
             }
     )
     ResponseEntity<PagedModel<EntityModel<UserResponseDTO>>> findAll(
-            @RequestParam(value = "page", defaultValue = "0") Integer page,
-            @RequestParam(value = "size", defaultValue = "12") Integer size,
+            @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(value = "size", defaultValue = "12") @Min(1) @Max(100) Integer size,
             @RequestParam(value = "direction", defaultValue = "asc") String direction
     );
 

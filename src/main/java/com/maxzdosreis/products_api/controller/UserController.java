@@ -33,8 +33,8 @@ public class UserController implements UserControllerDocs {
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE})
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PagedModel<EntityModel<UserResponseDTO>>> findAll(
-            @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
-            @RequestParam(value = "size", defaultValue = "12") @Min(1) @Max(100) Integer size,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "12") Integer size,
             @RequestParam(value = "direction", defaultValue = "asc") String direction
     ) {
         var sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
