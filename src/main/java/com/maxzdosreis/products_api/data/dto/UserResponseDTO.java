@@ -26,12 +26,12 @@ public class UserResponseDTO implements Serializable {
     @NotBlank(message = "O username é obrigatório")
     @Size(min = 3, max = 50, message = "O username deve ter entre 3 e 50 caracteres")
     @JsonProperty("username")
-    private String username;
+    private String userName;
 
     @NotBlank(message = "O nome completo é obrigatório")
     @Size(min = 3, max = 100, message = "O nome completo deve ter entre 3 e 100 caracteres")
     @JsonProperty("fullname")
-    private String fullname;
+    private String fullName;
 
     @NotBlank(message = "O email é obrigatório")
     @Email(message = "O email precisa ser válido")
