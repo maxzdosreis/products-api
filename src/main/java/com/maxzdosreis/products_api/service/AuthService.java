@@ -166,8 +166,8 @@ public class AuthService {
         // Retorna um DTO com os dados do usuário criado
         return UserResponseDTO.builder()
                 .id(savedUser.getId())
-                .username(savedUser.getUsername())
-                .fullname(savedUser.getFullName())
+                .userName(savedUser.getUsername())
+                .fullName(savedUser.getFullName())
                 .email(savedUser.getEmail())
                 .enabled(savedUser.getEnabled())
                 .build();
