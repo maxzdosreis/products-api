@@ -17,8 +17,10 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static com.maxzdosreis.products_api.mapper.ObjectMapper.parseObject;
@@ -43,119 +45,178 @@ public class ProductService {
 
         logger.info("Creating one Product: {}", productDto.getName());
 
-        if (productRepository.existsByName(productDto.getName())) {
-            throw new BadRequestException("Já existe um produto com o nome: " + productDto.getName());
-        }
+        validateProductDto(productDto, null);
 
-        var entity = parseObject(productDto, Product.class);
+        Product entity = toEntity(productDto);
+        // Começa em zero na criação
+        entity.setCurrentStock(BigDecimal.ZERO);
 
-        var dto =  parseObject(productRepository.save(entity), ProductDto.class);
-        addHateoasLinks(dto);
-        return dto;
+        ProductDto result = toDto(productRepository.save(entity));
+        addHateoasLinks(result);
+        return result;
     }
 
     public PagedModel<EntityModel<ProductDto>> findAll(Pageable pageable){
         logger.info("Finding all Products");
-        var products = productRepository.findAll(pageable);
-
-        var productsWithLinks = products.map(product -> {
-            var dto = parseObject(product, ProductDto.class);
-            addHateoasLinks(dto);
-            return dto;
+        var products = productRepository.findAll(pageable).map(p -> {
+            ProductDto productDto = toDto(p);
+            addHateoasLinks(productDto);
+            return productDto;
         });
 
-        Link findAllLink = linkTo(methodOn(ProductController.class)
+        Link selfLink = linkTo(methodOn(ProductController.class)
                 .findAll(
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
                         String.valueOf(pageable.getSort())))
                 .withSelfRel();
-        return assembler.toModel(productsWithLinks,findAllLink);
+        return assembler.toModel(products, selfLink);
     }
 
     public PagedModel<EntityModel<ProductDto>> findByName(String name, Pageable pageable) {
         logger.info("Finding Product by name: {}", name);
 
-        var productItem = productRepository.findProductByName(name, pageable);
-
-        var productWithLinks = productItem.map(product -> {
-            var dto = parseObject(product, ProductDto.class);
-            addHateoasLinks(dto);
-            return dto;
+        var products = productRepository.findProductByName(name, pageable).map(p -> {
+            ProductDto productDto = toDto(p);
+            addHateoasLinks(productDto);
+            return productDto;
         });
 
-        Link findByNameLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(ProductController.class)
+        Link selfLink = linkTo(methodOn(ProductController.class)
                 .findByName(
                         name,
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
                         String.valueOf(pageable.getSort())))
                 .withSelfRel();
-        return assembler.toModel(productWithLinks, findByNameLink);
+        return assembler.toModel(products, selfLink);
+    }
+
+    public ProductDto findById(Long id) {
+        logger.info("Finding product id={}", id);
+
+        Product entity = findEntityById(id);
+        ProductDto dto = toDto(entity);
+        addHateoasLinks(dto);
+        return dto;
     }
 
     public ProductDto updateProduct(Long id, ProductDto productDto) {
         if (productDto == null) throw new RequiredObjectIsNullException();
 
-        logger.info("Updating one Product");
+        logger.info("Updating product id={}", id);
 
-        Product entity = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
-
-        if (!entity.getName().equals(productDto.getName())) {
-            if (productRepository.existsByName(productDto.getName())) {
-                throw new BadRequestException("Já existe um produto com o nome: " + productDto.getName());
-            }
-        }
+        Product entity = findEntityById(id);
+        validateProductDto(productDto, entity);
 
         entity.setName(productDto.getName());
         entity.setDescription(productDto.getDescription());
-        entity.setPrice(productDto.getPrice());
-        entity.setQuantity(productDto.getQuantity());
+        entity.setUnit(productDto.getUnit());
+        entity.setType(productDto.getType());
+        entity.setCostPrice(productDto.getCostPrice());
+        entity.setSalePrice(productDto.getSalePrice());
+        entity.setMinStock(productDto.getMinStock());
+        entity.setMaxStock(productDto.getMaxStock());
+        entity.setRequiresBatchControl(
+                productDto.getRequiresBatchControl() != null ? productDto.getRequiresBatchControl() : false);
+        entity.setRequiresExpiryControl(
+                productDto.getRequiresExpiryControl() != null ? productDto.getRequiresExpiryControl() : false);
 
-        var dto = parseObject(productRepository.save(entity), ProductDto.class);
-        addHateoasLinks(dto);
-        return dto;
-    }
-
-    public ProductDto findById(Long id) {
-        logger.info("Finding one Product");
-
-        var entity = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
-        var dto = parseObject(entity, ProductDto.class);
-        addHateoasLinks(dto);
-        return dto;
+        ProductDto result = toDto(productRepository.save(entity));
+        addHateoasLinks(result);
+        return result;
     }
 
     @Transactional
     public ProductDto enableProduct(Long id) {
-        logger.info("Enabling one Product");
+        logger.info("Enabling product id={}", id);
 
-        productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        findEntityById(id);
         productRepository.enableProduct(id);
 
-        var entity = productRepository.findById(id).get();
-        var dto = parseObject(entity, ProductDto.class);
+        ProductDto dto = toDto(productRepository.findById(id).get());
         addHateoasLinks(dto);
         return dto;
     }
 
     @Transactional
     public ProductDto disableProduct(Long id) {
-        logger.info("Disabling one Product");
+        logger.info("Disabling product id={}", id);
 
-        productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        findEntityById(id);
         productRepository.disableProduct(id);
 
-        var entity = productRepository.findById(id).get();
-        var dto = parseObject(entity, ProductDto.class);
+        ProductDto dto = toDto(productRepository.findById(id).get());
         addHateoasLinks(dto);
         return dto;
     }
 
     public void delete(Long id) {
-        logger.info("Deleting one Product");
-        Product entity = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        logger.info("Deleting product id={}", id);
+        Product entity = findEntityById(id);
         productRepository.delete(entity);
+    }
+
+    private Product findEntityById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com ID: " + id));
+    }
+
+    private void validateProductDto(ProductDto productDto, Product existing) {
+        // Verifica nome duplicado
+        boolean nameChanged = existing == null || !existing.getName().equals(productDto.getName());
+        if (nameChanged && productRepository.existsByName(productDto.getName())) {
+            throw new BadRequestException("Já existe um produto com o nome: " + productDto.getName());
+        }
+
+        // Valida intervalo de estoque
+        if (productDto.getMinStock() != null && productDto.getMaxStock() != null) {
+            if (productDto.getMinStock().compareTo(productDto.getMaxStock()) > 0) {
+                throw new BadRequestException("Estoque mínimo não pode ser maior que o estoque máximo");
+            }
+        }
+
+        // Valida margens de preço
+        if (productDto.getCostPrice() != null && productDto.getSalePrice() != null) {
+            if (productDto.getCostPrice().compareTo(productDto.getSalePrice()) > 0) {
+                throw new BadCredentialsException("Preço de venda não pode ser menor que o preço de custo");
+            }
+        }
+    }
+
+    private Product toEntity(ProductDto productDto) {
+        return Product.builder()
+                .id(productDto.getId())
+                .name(productDto.getName())
+                .description(productDto.getDescription())
+                .unit(productDto.getUnit())
+                .type(productDto.getType())
+                .costPrice(productDto.getCostPrice())
+                .salePrice(productDto.getSalePrice())
+                .minStock(productDto.getMinStock())
+                .maxStock(productDto.getMaxStock())
+                .currentStock(productDto.getCurrentStock() !=  null ? productDto.getCurrentStock() : BigDecimal.ZERO)
+                .requiresBatchControl(productDto.getRequiresBatchControl() != null ? productDto.getRequiresBatchControl() : false)
+                .requiresExpiryControl(productDto.getRequiresExpiryControl() != null ? productDto.getRequiresExpiryControl() : false)
+                .build();
+    }
+
+    private ProductDto toDto(Product entity) {
+        return ProductDto.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .unit(entity.getUnit())
+                .type(entity.getType())
+                .costPrice(entity.getCostPrice())
+                .salePrice(entity.getSalePrice())
+                .minStock(entity.getMinStock())
+                .maxStock(entity.getMaxStock())
+                .currentStock(entity.getCurrentStock())
+                .requiresBatchControl(entity.getRequiresBatchControl())
+                .requiresExpiryControl(entity.getRequiresExpiryControl())
+                .enabled(entity.getEnabled())
+                .build();
     }
 
     private void addHateoasLinks(ProductDto productDto) {

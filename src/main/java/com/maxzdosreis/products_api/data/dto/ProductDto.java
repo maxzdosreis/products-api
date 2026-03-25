@@ -39,7 +39,7 @@ public class ProductDto extends RepresentationModel<ProductDto> implements Seria
     private String unit;
 
     @JsonProperty("type")
-    private ProductType productType;
+    private ProductType type;
 
     @DecimalMin(value = "0.0", inclusive = false, message = "Preço de custo deve ser maior que zero")
     @Digits(integer = 17, fraction = 2, message = "Preço de custo inválido")
