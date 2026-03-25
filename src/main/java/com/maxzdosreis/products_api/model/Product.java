@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "products", uniqueConstraints = @UniqueConstraint(columnNames = "name"))
 @Getter
@@ -22,16 +24,57 @@ public class Product {
     @Column(nullable = false, length = 250, unique = true)
     private String name;
 
-    @Column(nullable = false)
-    private Double price;
-
     @Column(nullable = false, length = 250)
     private String description;
 
-    @Column(nullable = false)
-    private Integer quantity;
+    @Column(length = 10)
+    private String unit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private ProductType type;
+
+    @Column(name = "cost_price", precision = 19, scale = 2)
+    private BigDecimal costPrice;
+
+    @Column(name = "sale_price", precision = 19, scale = 2)
+    private BigDecimal salePrice;
+
+    @Column(name = "min_stock", precision = 19, scale = 3)
+    private BigDecimal minStock;
+
+    @Column(name = "max_stock", precision = 19, scale = 3)
+    private BigDecimal maxStock;
+
+    @Column(name = "current_stock", precision = 19, scale = 3)
+    @Builder.Default
+    private BigDecimal currentStock = BigDecimal.ZERO;
+
+    @Column(name = "requires_batch_control", nullable = false)
+    @Builder.Default
+    private Boolean requiresBatchControl = false;
+
+    @Column(name = "requires_expiry_control", nullable = false)
+    @Builder.Default
+    private Boolean requiresExpiryControl = false;
 
     @Column(nullable = false)
     @Builder.Default
     private Boolean enabled = true;
+
+    public enum ProductType {
+        PRODUCT, SERVICE
+    }
+
+    // Verifica se o estoque está abaixo do mínimo
+    public Boolean isBelowMinStock() {
+        if (currentStock == null || minStock == null) return false;
+        return currentStock.compareTo(minStock) <= 0;
+    }
+
+    // Verifica se o estoque está acima do máximo
+    public Boolean isAboveMaxStock() {
+        if (currentStock == null || maxStock == null) return false;
+        return currentStock.compareTo(maxStock) > 0;
+    }
 }
