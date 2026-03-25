@@ -179,7 +179,7 @@ public class ProductService {
         // Valida margens de preço
         if (productDto.getCostPrice() != null && productDto.getSalePrice() != null) {
             if (productDto.getCostPrice().compareTo(productDto.getSalePrice()) > 0) {
-                throw new BadCredentialsException("Preço de venda não pode ser menor que o preço de custo");
+                throw new BadRequestException("Preço de venda não pode ser menor que o preço de custo");
             }
         }
     }
