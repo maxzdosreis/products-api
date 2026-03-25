@@ -32,9 +32,8 @@ public class ProductController {
         consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<ProductDto> create(@Valid @RequestBody ProductDto productDto) {
-        ProductDto product = productService.createProduct(productDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(product);
+    public ResponseEntity<ProductDto> create(@Valid @RequestBody ProductDto productDto) {;
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(productDto));
     }
 
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE})
@@ -66,8 +65,7 @@ public class ProductController {
         produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
     public ResponseEntity<ProductDto> findById(@PathVariable("id") Long id){
-        ProductDto product = productService.findById(id);
-        return ResponseEntity.ok().body(product);
+        return ResponseEntity.ok(productService.findById(id));
     }
 
     @PutMapping(value = "/{id}",
@@ -76,8 +74,7 @@ public class ProductController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ProductDto> update(@PathVariable("id") Long id, @Valid @RequestBody ProductDto productDto){
-        ProductDto product = productService.updateProduct(id, productDto);
-        return ResponseEntity.ok().body(product);
+        return ResponseEntity.ok(productService.updateProduct(id, productDto));
     }
 
     @PatchMapping(value = "/{id}/enable",
@@ -85,8 +82,7 @@ public class ProductController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ProductDto> enableProduct(@PathVariable("id") Long id) {
-        var dto = productService.enableProduct(id);
-        return ResponseEntity.ok().body(dto);
+        return ResponseEntity.ok(productService.enableProduct(id));
     }
 
     @PatchMapping(value = "/{id}/disable",
@@ -94,13 +90,12 @@ public class ProductController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ProductDto> disableProduct(@PathVariable("id") Long id) {
-        var dto = productService.disableProduct(id);
-        return ResponseEntity.ok().body(dto);
+        return ResponseEntity.ok().body(productService.disableProduct(id));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
-    public ResponseEntity<?> delete(@PathVariable("id") Long id){
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id){
         productService.delete(id);
         return ResponseEntity.noContent().build();
     }
