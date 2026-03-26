@@ -20,8 +20,12 @@ UPDATE products SET sale_price = price WHERE sale_price IS NULL;
 
 -- Adiciona os campos de estoque
 ALTER TABLE products
-    ADD COLUMN min_stock DECIMAL(19,3) NULL,
-    ADD COLUMN max_stock DECIMAL(19,3) NULL,
+    ADD COLUMN min_stock DECIMAL(19,3) NULL;
+
+ALTER TABLE products
+    ADD COLUMN max_stock DECIMAL(19,3) NULL;
+
+ALTER TABLE products
     ADD COLUMN current_stock DECIMAL(19,3) NOT NULL DEFAULT 0.000;
 
 -- Migrar quantity para current_stock nos registros existentes
