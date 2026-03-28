@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS categories (
     description VARCHAR(500) NULL,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id_category),
-    CONSTRAINT uk_category_name (name_category)
+    CONSTRAINT uk_category_name UNIQUE (name_category)
 );
 
 CREATE INDEX idx_category_name ON categories(name_category);

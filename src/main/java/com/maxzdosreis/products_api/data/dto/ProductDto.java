@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Builder
-@JsonPropertyOrder({"id", "name", "price", "description", "quantity"})
+@JsonPropertyOrder({"id", "name", "description", "unit", "type", "costPrice", "salePrice", "minStock", "maxStock", "currentStock", "requiresBatchControl", "requiresExpiryControl", "enabled"})
 public class ProductDto extends RepresentationModel<ProductDto> implements Serializable {
 
     private static final long serialVersionUID = 1L;
