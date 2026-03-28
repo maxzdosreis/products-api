@@ -34,10 +34,10 @@ public class ProductService {
     private Logger logger = LoggerFactory.getLogger(ProductService.class.getName());
 
     @Autowired
-    PagedResourcesAssembler<ProductDto> assembler;
+    private PagedResourcesAssembler<ProductDto> assembler;
 
     @Autowired
-    ProductRepository productRepository;
+    private ProductRepository productRepository;
 
     public ProductDto createProduct(ProductDto productDto) {
 
