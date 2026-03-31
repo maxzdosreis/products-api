@@ -7,14 +7,21 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "products", uniqueConstraints = @UniqueConstraint(columnNames = "name"))
+@Table(name = "products", uniqueConstraints = @UniqueConstraint(columnNames = "name"),
+    indexes = {
+        @Index(name = "idx_product_name", columnList = "name"),
+        @Index(name = "idx_product_type", columnList = "type"),
+        @Index(name = "idx_product_enabled", columnList = "enabled"),
+        @Index(name = "idx_product_category", columnList = "category_id")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(of = "id")
-@ToString
+@ToString(exclude = "category")
 public class Product {
 
     @Id
@@ -33,6 +40,10 @@ public class Product {
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
     private ProductType type;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Column(name = "cost_price", precision = 19, scale = 2)
     private BigDecimal costPrice;
@@ -69,7 +80,7 @@ public class Product {
     // Verifica se o estoque está abaixo do mínimo
     public Boolean isBelowMinStock() {
         if (currentStock == null || minStock == null) return false;
-        return currentStock.compareTo(minStock) <= 0;
+        return currentStock.compareTo(minStock) < 0;
     }
 
     // Verifica se o estoque está acima do máximo
