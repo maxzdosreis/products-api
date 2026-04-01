@@ -139,7 +139,7 @@ public class CategoryService {
         categoryRepository.delete(entity);
     }
 
-    private Category findEntityById(Long id) {
+    public Category findEntityById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada com ID: " + id));
     }

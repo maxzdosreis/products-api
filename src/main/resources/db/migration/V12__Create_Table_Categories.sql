@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE INDEX idx_category_name ON categories(name_category);
 
 -- Categoria padrão para produtos já existentes
-INSERT INTO categories (name_category, description, enabled)
-VALUES ('Geral','Categoria padrão para produtos sem classificação', TRUE);
+INSERT INTO categories (id_category, name_category, description, enabled)
+VALUES (1, 'Geral','Categoria padrão para produtos sem classificação', TRUE);

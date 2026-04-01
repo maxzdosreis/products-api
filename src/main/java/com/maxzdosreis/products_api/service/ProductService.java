@@ -5,9 +5,9 @@ import com.maxzdosreis.products_api.data.dto.ProductDto;
 import com.maxzdosreis.products_api.exception.BadRequestException;
 import com.maxzdosreis.products_api.exception.RequiredObjectIsNullException;
 import com.maxzdosreis.products_api.exception.ResourceNotFoundException;
+import com.maxzdosreis.products_api.model.Category;
 import com.maxzdosreis.products_api.model.Product;
 import com.maxzdosreis.products_api.repository.ProductRepository;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +19,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -39,6 +40,10 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private CategoryService categoryService;
+
+    @Transactional
     public ProductDto createProduct(ProductDto productDto) {
 
         if (productDto == null) throw new RequiredObjectIsNullException();
@@ -47,7 +52,8 @@ public class ProductService {
 
         validateProductDto(productDto, null);
 
-        Product entity = toEntity(productDto);
+        Category category = categoryService.findEntityById(productDto.getCategoryId());
+        Product entity = toEntity(productDto, category);
         // Começa em zero na criação
         entity.setCurrentStock(BigDecimal.ZERO);
 
@@ -56,6 +62,7 @@ public class ProductService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public PagedModel<EntityModel<ProductDto>> findAll(Pageable pageable){
         logger.info("Finding all Products");
         var products = productRepository.findAll(pageable).map(p -> {
@@ -73,6 +80,7 @@ public class ProductService {
         return assembler.toModel(products, selfLink);
     }
 
+    @Transactional(readOnly = true)
     public PagedModel<EntityModel<ProductDto>> findByName(String name, Pageable pageable) {
         logger.info("Finding Product by name: {}", name);
 
@@ -92,6 +100,7 @@ public class ProductService {
         return assembler.toModel(products, selfLink);
     }
 
+    @Transactional(readOnly = true)
     public ProductDto findById(Long id) {
         logger.info("Finding product id={}", id);
 
@@ -101,6 +110,7 @@ public class ProductService {
         return dto;
     }
 
+    @Transactional
     public ProductDto updateProduct(Long id, ProductDto productDto) {
         if (productDto == null) throw new RequiredObjectIsNullException();
 
@@ -108,11 +118,13 @@ public class ProductService {
 
         Product entity = findEntityById(id);
         validateProductDto(productDto, entity);
+        Category category = categoryService.findEntityById(productDto.getCategoryId());
 
         entity.setName(productDto.getName());
         entity.setDescription(productDto.getDescription());
         entity.setUnit(productDto.getUnit());
         entity.setType(productDto.getType());
+        entity.setCategory(category);
         entity.setCostPrice(productDto.getCostPrice());
         entity.setSalePrice(productDto.getSalePrice());
         entity.setMinStock(productDto.getMinStock());
@@ -153,8 +165,7 @@ public class ProductService {
 
     public void delete(Long id) {
         logger.info("Deleting product id={}", id);
-        Product entity = findEntityById(id);
-        productRepository.delete(entity);
+        productRepository.delete(findEntityById(id));
     }
 
     private Product findEntityById(Long id) {
@@ -184,13 +195,14 @@ public class ProductService {
         }
     }
 
-    private Product toEntity(ProductDto productDto) {
+    private Product toEntity(ProductDto productDto, Category category) {
         return Product.builder()
                 .id(productDto.getId())
                 .name(productDto.getName())
                 .description(productDto.getDescription())
                 .unit(productDto.getUnit())
                 .type(productDto.getType())
+                .category(category)
                 .costPrice(productDto.getCostPrice())
                 .salePrice(productDto.getSalePrice())
                 .minStock(productDto.getMinStock())
@@ -208,6 +220,8 @@ public class ProductService {
                 .description(entity.getDescription())
                 .unit(entity.getUnit())
                 .type(entity.getType())
+                .categoryId(entity.getCategory() != null ? entity.getCategory().getId() : null)
+                .categoryName(entity.getCategory() != null ? entity.getCategory().getName() : null)
                 .costPrice(entity.getCostPrice())
                 .salePrice(entity.getSalePrice())
                 .minStock(entity.getMinStock())

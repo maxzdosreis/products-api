@@ -2,6 +2,7 @@ package com.maxzdosreis.products_api.data.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.maxzdosreis.products_api.model.Category;
 import com.maxzdosreis.products_api.model.Product.ProductType;
 import com.maxzdosreis.products_api.model.Product;
 import jakarta.validation.constraints.*;
@@ -16,7 +17,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Builder
-@JsonPropertyOrder({"id", "name", "description", "unit", "type", "costPrice", "salePrice", "minStock", "maxStock", "currentStock", "requiresBatchControl", "requiresExpiryControl", "enabled"})
+@JsonPropertyOrder({"id", "name", "description", "unit", "type", "categoryId", "categoryName", "costPrice", "salePrice", "minStock", "maxStock", "currentStock", "requiresBatchControl", "requiresExpiryControl", "enabled"})
 public class ProductDto extends RepresentationModel<ProductDto> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -40,6 +41,13 @@ public class ProductDto extends RepresentationModel<ProductDto> implements Seria
 
     @JsonProperty("type")
     private ProductType type;
+
+    @NotNull(message = "Categoria é obrigatória")
+    @JsonProperty("categoryId")
+    private Long categoryId;
+
+    @JsonProperty("categoryName")
+    private String categoryName;
 
     @DecimalMin(value = "0.0", inclusive = false, message = "Preço de custo deve ser maior que zero")
     @Digits(integer = 17, fraction = 2, message = "Preço de custo inválido")
