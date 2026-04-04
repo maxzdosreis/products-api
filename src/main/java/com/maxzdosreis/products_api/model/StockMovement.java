@@ -28,6 +28,7 @@ public class StockMovement implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_stock_movements")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

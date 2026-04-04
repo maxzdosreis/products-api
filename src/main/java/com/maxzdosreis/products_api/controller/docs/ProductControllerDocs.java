@@ -1,6 +1,8 @@
 package com.maxzdosreis.products_api.controller.docs;
 
 import com.maxzdosreis.products_api.data.dto.ProductDto;
+import com.maxzdosreis.products_api.data.dto.StockMovementRequestDto;
+import com.maxzdosreis.products_api.data.dto.StockMovementResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -160,6 +162,45 @@ public interface ProductControllerDocs {
     )
     ResponseEntity<ProductDto> disableProduct(@PathVariable("id") Long id);
 
+    @Operation(summary = "Updates stock a Product",
+            description = "Updates stock a specific product by their ID",
+            tags = {"Product"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = StockMovementRequestDto.class))
+                    ),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<StockMovementResponseDto> updateStock(@PathVariable("id") Long id, @Valid @RequestBody StockMovementRequestDto request);
+
+    @Operation(summary = "Find All Stock Movements a Product",
+            description = "Find all stock movements a specific product by their ID",
+            tags = {"Product"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = StockMovementRequestDto.class))
+                    ),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<PagedModel<EntityModel<StockMovementResponseDto>>> stockHistory(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "12") Integer size,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction
+    );
+
     @Operation(summary = "Deletes a Products",
             description = "Deletes a specific product by their ID",
             tags = {"Product"},
@@ -175,5 +216,5 @@ public interface ProductControllerDocs {
                     @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
-    ResponseEntity<?> delete(@PathVariable("id") Long id);
+    ResponseEntity<Void> delete(@PathVariable("id") Long id);
 }
