@@ -28,7 +28,7 @@ public class StockMovementRequestDto implements Serializable {
     @JsonProperty("quantity")
     private BigDecimal quantity;
 
-    @Size(message = "Motivo deve ter no máximo 255 caracteres")
+    @Size(max = 255, message = "Motivo deve ter no máximo 255 caracteres")
     @JsonProperty("reason")
     private String reason;
 }
