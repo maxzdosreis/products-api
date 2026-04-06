@@ -124,7 +124,7 @@ public class ProductServiceTest {
         void shouldThrowWhenMinStockGreaterThanMaxStock() {
             productDto.setMinStock(new BigDecimal("100.000"));
             productDto.setMaxStock(new BigDecimal("10.000"));
-            given(productRepository.existsByName(anyString())).willReturn(true);
+            given(productRepository.existsByName(anyString())).willReturn(false);
 
             assertThatThrownBy(() -> productService.createProduct(productDto))
                     .isInstanceOf(BadRequestException.class)
@@ -136,7 +136,7 @@ public class ProductServiceTest {
         void shouldThrowWhenSalePriceLowerThanCostPrice() {
             productDto.setCostPrice(new BigDecimal("5000.00"));
             productDto.setSalePrice(new BigDecimal("3000.00"));
-            given(productRepository.existsByName(anyString())).willReturn(true);
+            given(productRepository.existsByName(anyString())).willReturn(false);
 
             assertThatThrownBy(() -> productService.createProduct(productDto))
                     .isInstanceOf(BadRequestException.class)
@@ -194,7 +194,7 @@ public class ProductServiceTest {
         void shouldUpdateProductSuccessfully() {
             productDto.setName("Notebook atualizado");
             given(productRepository.findById(1L)).willReturn(Optional.of(product));
-            given(productRepository.existsByName("Notebook Atualizado")).willReturn(false);
+            given(productRepository.existsByName(anyString())).willReturn(false);
             given(categoryService.findEntityById(1L)).willReturn(category);
             given(productRepository.save(any(Product.class))).willReturn(product);
 
