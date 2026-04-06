@@ -92,7 +92,7 @@ public class StockMovementService {
             );
         }
         if (type == MovementType.ENTRADA && product.getMaxStock() != null
-                && newStock.compareTo(product.getMaxStock()) < 0) {
+                && newStock.compareTo(product.getMaxStock()) > 0) {
             throw new BadRequestException("Entrada excede o estoque máximo permitido (" + product.getMaxStock() + ").");
         }
     }
