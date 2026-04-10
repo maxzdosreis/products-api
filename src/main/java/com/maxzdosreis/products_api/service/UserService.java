@@ -1,7 +1,10 @@
 package com.maxzdosreis.products_api.service;
 
+import com.maxzdosreis.products_api.data.dto.UserRequestDTO;
 import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
+import com.maxzdosreis.products_api.data.dto.security.SignUpRequestDTO;
 import com.maxzdosreis.products_api.exception.ResourceNotFoundException;
+import com.maxzdosreis.products_api.mapper.UserMapper;
 import com.maxzdosreis.products_api.model.Permission;
 import com.maxzdosreis.products_api.model.User;
 import com.maxzdosreis.products_api.repository.PermissionRepository;
@@ -18,8 +21,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.maxzdosreis.products_api.mapper.ObjectMapper.parseObject;
-import static com.maxzdosreis.products_api.mapper.ObjectMapper.parseListObjects;
 
 import java.util.List;
 
@@ -35,6 +36,9 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private PagedResourcesAssembler<UserResponseDTO> assembler;
+
+    @Autowired
+    private UserMapper userMapper;
 
     // Método que busca usuário no banco de dados através do username do mesmo
     @Override
@@ -53,7 +57,7 @@ public class UserService implements UserDetailsService {
     public PagedModel<EntityModel<UserResponseDTO>> findAll(Pageable pageable) {
         var users = userRepository.findAll(pageable);
 
-        var usersDto = users.map(user -> parseObject(user, UserResponseDTO.class));
+        var usersDto = users.map(userMapper::toDto);
 
         return assembler.toModel(usersDto);
     }
@@ -62,8 +66,8 @@ public class UserService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserResponseDTO findById(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
-        var dto = parseObject(user, UserResponseDTO.class);
-        return dto;
+
+        return userMapper.toDto(user);
     }
 
     // Busca um usuário por email
@@ -74,29 +78,33 @@ public class UserService implements UserDetailsService {
 
     // Atualiza informações de um usuário
     @Transactional
-    public UserResponseDTO updateUser(Long id, String fullName, String email, Boolean enabled) {
+    public UserResponseDTO updateUser(Long id, UserRequestDTO request) {
         User user =  userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
-        if(fullName!= null && !fullName.isBlank()){
-            user.setFullName(fullName);
-        }
-
-        if(email!= null && !email.isBlank()){
-            // Verifica se o email já está em uso por outro usuário
-            User existingUser = userRepository.findByEmail(email);
-            if(existingUser != null && !existingUser.getId().equals(id)){
-                throw new IllegalArgumentException("O endereço de email já está sendo utilizado po um usuário!");
+        if (request.getUserName() != null &&  !request.getUserName().isBlank()) {
+            // Verificar se o username já está em uso por outro usuário
+            User existingUser = userRepository.findByUsername(request.getUserName());
+            if (existingUser != null && !existingUser.getId().equals(id)) {
+                throw new IllegalArgumentException("O username já está sendo utilizado por outro usuário");
             }
-            user.setEmail(email);
+            user.setUserName(request.getUserName());
         }
 
-        if(enabled != null){
-            user.setEnabled(enabled);
+        if(request.getFullName()!= null && !request.getFullName().isBlank()){
+            user.setFullName(request.getFullName());
+        }
+
+        if(request.getEmail() != null && !request.getEmail().isBlank()){
+            // Verifica se o email já está em uso por outro usuário
+            User existingUser = userRepository.findByEmail(request.getEmail());
+            if(existingUser != null && !existingUser.getId().equals(id)){
+                throw new IllegalArgumentException("O endereço de email já está sendo utilizado por um usuário");
+            }
+            user.setEmail(request.getEmail());
         }
 
         User updatedUser = userRepository.save(user);
-        var dto = parseObject(updatedUser, UserResponseDTO.class);
-        return dto;
+        return userMapper.toDto(updatedUser);
     }
 
     // Deleta um usuário (soft delete - apenas desabilita o usuário)

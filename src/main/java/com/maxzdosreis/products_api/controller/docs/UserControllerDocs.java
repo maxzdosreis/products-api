@@ -1,5 +1,6 @@
 package com.maxzdosreis.products_api.controller.docs;
 
+import com.maxzdosreis.products_api.data.dto.UserRequestDTO;
 import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -7,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.hateoas.EntityModel;
@@ -14,6 +16,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -75,9 +78,7 @@ public interface UserControllerDocs {
     )
     ResponseEntity<UserResponseDTO> update(
             @PathVariable("id") Long id,
-            @RequestParam(required = false) String fullName,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) Boolean enabled
+            @Valid @RequestBody UserRequestDTO request
     );
 
     @Operation(
