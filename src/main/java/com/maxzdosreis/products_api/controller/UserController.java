@@ -1,9 +1,11 @@
 package com.maxzdosreis.products_api.controller;
 
 import com.maxzdosreis.products_api.controller.docs.UserControllerDocs;
+import com.maxzdosreis.products_api.data.dto.UserRequestDTO;
 import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
 import com.maxzdosreis.products_api.serialization.converter.CustomMediaTypes;
 import com.maxzdosreis.products_api.service.UserService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,11 +63,9 @@ public class UserController implements UserControllerDocs {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> update(
         @PathVariable("id") Long id,
-        @RequestParam(required = false) String fullName,
-        @RequestParam(required = false) String email,
-        @RequestParam(required = false) Boolean enabled
+        @Valid @RequestBody UserRequestDTO request
     ) {
-        UserResponseDTO user = userService.updateUser(id, fullName, email, enabled);
+        UserResponseDTO user = userService.updateUser(id, request);
         return ResponseEntity.ok(user);
     }
 
