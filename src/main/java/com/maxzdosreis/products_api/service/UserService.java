@@ -27,10 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
 public class UserService implements UserDetailsService {
 
-    private Logger logger = LoggerFactory.getLogger(ProductService.class.getName());
+    private Logger logger = LoggerFactory.getLogger(UserService.class.getName());
 
     @Autowired
     UserRepository userRepository;
@@ -112,7 +111,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public UserResponseDTO enableProduct(Long id) {
+    public UserResponseDTO enableUser(Long id) {
         logger.info("Enabling product id={}", id);
 
         findUserEntityById(id);
@@ -122,7 +121,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public UserResponseDTO disableProduct(Long id) {
+    public UserResponseDTO disableUser(Long id) {
         logger.info("Disabling product id={}", id);
 
         findUserEntityById(id);
