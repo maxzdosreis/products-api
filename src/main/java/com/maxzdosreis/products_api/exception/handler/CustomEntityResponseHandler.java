@@ -1,12 +1,15 @@
 package com.maxzdosreis.products_api.exception.handler;
 
 import com.maxzdosreis.products_api.exception.*;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -41,7 +44,16 @@ public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler 
     }
 
     @ExceptionHandler(Exception.class)
-    public final ResponseEntity<ExceptionResponse> handleAllExceptions(Exception ex, WebRequest request) {
+    public final ResponseEntity<ExceptionResponse> handleAllExceptions(Exception ex, WebRequest request) throws Exception{
+        // Deixa o Spring Security tratar as sua próprias exceções
+        if (ex instanceof AccessDeniedException || ex instanceof AuthenticationException) {
+            throw ex;
+        }
+        // Deixa o framework tratar violações de constraint
+        if (ex instanceof ConstraintViolationException) {
+            throw ex;
+        }
+
         ExceptionResponse response = new ExceptionResponse(
                 new Date(),
                 "Erro interno do servidor",
