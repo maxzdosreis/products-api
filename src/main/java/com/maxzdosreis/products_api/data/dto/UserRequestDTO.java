@@ -17,7 +17,7 @@ import java.io.Serializable;
 @Builder
 @EqualsAndHashCode
 @ToString
-@JsonPropertyOrder({})
+@JsonPropertyOrder({"username", "fullname", "email"})
 public class UserRequestDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;

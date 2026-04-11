@@ -1,6 +1,7 @@
 package com.maxzdosreis.products_api.controller;
 
 import com.maxzdosreis.products_api.controller.docs.UserControllerDocs;
+import com.maxzdosreis.products_api.data.dto.ProductDto;
 import com.maxzdosreis.products_api.data.dto.UserRequestDTO;
 import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
 import com.maxzdosreis.products_api.serialization.converter.CustomMediaTypes;
@@ -67,6 +68,26 @@ public class UserController implements UserControllerDocs {
     ) {
         UserResponseDTO user = userService.updateUser(id, request);
         return ResponseEntity.ok(user);
+    }
+
+    // Ativa usuário
+    // PATCH /api/users/{id}/disable
+    @PatchMapping(value = "/{id}/enable",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<UserResponseDTO> enableUser(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(userService.enableUser(id));
+    }
+
+    // Desativa usuário
+    // PATCH /api/users/{id}/disable
+    @PatchMapping(value = "/{id}/disable",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<UserResponseDTO> disableUser(@PathVariable("id") Long id) {
+        return ResponseEntity.ok().body(userService.disableUser(id));
     }
 
     // Deleta um usuário

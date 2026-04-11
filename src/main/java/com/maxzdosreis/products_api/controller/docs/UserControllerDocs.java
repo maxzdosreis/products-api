@@ -1,5 +1,6 @@
 package com.maxzdosreis.products_api.controller.docs;
 
+import com.maxzdosreis.products_api.data.dto.ProductDto;
 import com.maxzdosreis.products_api.data.dto.UserRequestDTO;
 import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,6 +81,42 @@ public interface UserControllerDocs {
             @PathVariable("id") Long id,
             @Valid @RequestBody UserRequestDTO request
     );
+
+    @Operation(summary = "Enable a User",
+            description = "Enable a specific user by your ID",
+            tags = {"User"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ProductDto.class))
+                    ),
+                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<UserResponseDTO> enableUser(@PathVariable("id") Long id);
+
+    @Operation(summary = "Disable a User",
+            description = "Disable a user product by your ID",
+            tags = {"User"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ProductDto.class))
+                    ),
+                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<UserResponseDTO> disableUser(@PathVariable("id") Long id);
 
     @Operation(
             summary = "Delete user",

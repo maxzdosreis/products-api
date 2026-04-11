@@ -10,6 +10,8 @@ import com.maxzdosreis.products_api.model.User;
 import com.maxzdosreis.products_api.repository.PermissionRepository;
 import com.maxzdosreis.products_api.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
@@ -25,8 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
 public class UserService implements UserDetailsService {
+
+    private Logger logger = LoggerFactory.getLogger(UserService.class.getName());
 
     @Autowired
     UserRepository userRepository;
@@ -107,22 +110,37 @@ public class UserService implements UserDetailsService {
         return userMapper.toDto(updatedUser);
     }
 
-    // Deleta um usuário (soft delete - apenas desabilita o usuário)
     @Transactional
+    public UserResponseDTO enableUser(Long id) {
+        logger.info("Enabling product id={}", id);
+
+        findUserEntityById(id);
+        userRepository.enableUser(id);
+
+        return userMapper.toDto(findUserEntityById(id));
+    }
+
+    @Transactional
+    public UserResponseDTO disableUser(Long id) {
+        logger.info("Disabling product id={}", id);
+
+        findUserEntityById(id);
+        userRepository.disableUser(id);
+
+        return userMapper.toDto(findUserEntityById(id));
+    }
+
     public void delete(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
-        user.setEnabled(false);
-        userRepository.save(user);
+        logger.info("Deleting user id={}", id);
+        userRepository.delete(findUserEntityById(id));
     }
 
     // Adiciona uma permissão a um usuário
     @Transactional
     public void addPermissionToUser(Long userId, String permissionName) {
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = findUserEntityById(userId);
 
-        var permission = permissionRepository.findByDescription(permissionName)
-                .orElseThrow(() -> new ResourceNotFoundException("Permission not found"));
+        Permission permission = findPermissionEntityByDescription(permissionName);
 
         user.getPermissions().add(permission);
         userRepository.save(user);
@@ -131,15 +149,13 @@ public class UserService implements UserDetailsService {
     // Remove uma permissão de um usuário
     @Transactional
     public void removePermissionToUser(Long userId, String permissionName) {
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = findUserEntityById(userId);
 
         if(user.getPermissions().size() == 1) {
             throw new IllegalStateException("User must have at least one permission");
         }
 
-        Permission permission = permissionRepository.findByDescription(permissionName)
-                .orElseThrow(() -> new ResourceNotFoundException("Permission not found"));
+        Permission permission = findPermissionEntityByDescription(permissionName);
 
         user.getPermissions().remove(permission);
         userRepository.save(user);
@@ -148,12 +164,19 @@ public class UserService implements UserDetailsService {
     // Lista todas as permissões de um usuário
     @Transactional(readOnly = true)
     public List<String> listPermissionsToUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = findUserEntityById(userId);
 
         return user.getPermissions()
                 .stream()
                 .map(Permission::getDescription)
                 .toList();
+    }
+
+    private User findUserEntityById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
+    }
+
+    private Permission findPermissionEntityByDescription(String permissionName) {
+        return permissionRepository.findByDescription(permissionName).orElseThrow(() -> new ResourceNotFoundException("Permission not found"));
     }
 }
