@@ -113,7 +113,7 @@ public class ProductController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<StockMovementResponseDto> updateStock(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody StockMovementRequestDto request
     ) {
         return ResponseEntity.ok(stockMovementService.registerMovement(id, request));
@@ -124,9 +124,9 @@ public class ProductController {
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
     public ResponseEntity<PagedModel<EntityModel<StockMovementResponseDto>>> stockHistory(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = "0") @Min(0) Integer page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer size,
+            @PathVariable("id") Long id,
+            @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(value = "size", defaultValue = "20") @Min(1) @Max(100) Integer size,
             @RequestParam(value = "direction", defaultValue = "asc") String direction
     ) {
         var sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC: Sort.Direction.ASC;
