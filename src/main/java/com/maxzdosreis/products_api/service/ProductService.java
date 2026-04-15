@@ -7,21 +7,24 @@ import com.maxzdosreis.products_api.exception.RequiredObjectIsNullException;
 import com.maxzdosreis.products_api.exception.ResourceNotFoundException;
 import com.maxzdosreis.products_api.model.Category;
 import com.maxzdosreis.products_api.model.Product;
+import com.maxzdosreis.products_api.model.Product.ProductType;
+import com.maxzdosreis.products_api.model.enums.MatchMode;
 import com.maxzdosreis.products_api.repository.ProductRepository;
+import com.maxzdosreis.products_api.repository.spec.ProductSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -61,8 +64,26 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public PagedModel<EntityModel<ProductDto>> findAll(Pageable pageable){
-        logger.info("Finding all Products");
-        var products = productRepository.findAll(pageable).map(p -> {
+        return findWithFilters(null, null, null, null, null,
+                null, null, null, null, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public PagedModel<EntityModel<ProductDto>> findWithFilters(
+            String name, ProductType type, List<ProductType> types, Long categoryId, Boolean enabled, Boolean stockIssues,
+            MatchMode mode, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock, Pageable pageable
+    ) {
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.nameLike(name, mode))
+                .and(ProductSpecification.hasType(type))
+                .and(ProductSpecification.typeIn(types))
+                .and(ProductSpecification.hasCategory(categoryId))
+                .and(ProductSpecification.isEnabled(enabled))
+                .and(ProductSpecification.hasStockIssues(stockIssues))
+                .and(ProductSpecification.isInStock(inStock))
+                .and(ProductSpecification.priceBetween(minPrice, maxPrice));
+
+        var products = productRepository.findAll(spec, pageable).map(p -> {
             ProductDto productDto = toDto(p);
             addHateoasLinks(productDto);
             return productDto;
@@ -70,6 +91,8 @@ public class ProductService {
 
         Link selfLink = linkTo(methodOn(ProductController.class)
                 .findAll(
+                        name, type, types, categoryId, enabled, stockIssues,
+                        mode, minPrice, maxPrice, inStock,
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
                         String.valueOf(pageable.getSort())))
@@ -232,7 +255,7 @@ public class ProductService {
 
     private void addHateoasLinks(ProductDto productDto) {
         productDto.add(linkTo(methodOn(ProductController.class).findById(productDto.getId())).withSelfRel().withType("GET"));
-        productDto.add(linkTo(methodOn(ProductController.class).findAll(1,12,"asc")).withRel("findAll").withType("GET"));
+        productDto.add(linkTo(ProductController.class).withRel("findAll").withType("GET"));
         productDto.add(linkTo(methodOn(ProductController.class).findByName(productDto.getName(),1,12,"asc")).withRel("findByName").withType("GET"));
         productDto.add(linkTo(methodOn(ProductController.class).create(productDto)).withRel("create").withType("POST"));
         productDto.add(linkTo(methodOn(ProductController.class).update(productDto.getId(), productDto)).withRel("update").withType("PUT"));
