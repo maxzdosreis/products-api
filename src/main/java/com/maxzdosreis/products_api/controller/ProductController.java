@@ -3,6 +3,8 @@ package com.maxzdosreis.products_api.controller;
 import com.maxzdosreis.products_api.data.dto.ProductDto;
 import com.maxzdosreis.products_api.data.dto.StockMovementRequestDto;
 import com.maxzdosreis.products_api.data.dto.StockMovementResponseDto;
+import com.maxzdosreis.products_api.model.Product.ProductType;
+import com.maxzdosreis.products_api.model.enums.MatchMode;
 import com.maxzdosreis.products_api.serialization.converter.CustomMediaTypes;
 import com.maxzdosreis.products_api.service.ProductService;
 import com.maxzdosreis.products_api.service.StockMovementService;
@@ -21,6 +23,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @RequestMapping("/api/products")
 @RestController
@@ -46,13 +51,25 @@ public class ProductController {
     // Endpoint de busca de produtos (com paginação)
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE})
     public ResponseEntity<PagedModel<EntityModel<ProductDto>>> findAll(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "type", required = false) ProductType type,
+            @RequestParam(value = "types", required = false) List<ProductType> types,
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
+            @RequestParam(value = "enabled", required = false) Boolean enabled,
+            @RequestParam(value = "stockIssues", required = false) Boolean stockIssues,
+            @RequestParam(value = "nameMode", defaultValue = "CONTAINS", required = false) MatchMode mode,
+            @RequestParam(value = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(value = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(value = "inStock", required = false) Boolean inStock,
             @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
             @RequestParam(value = "size", defaultValue = "12") @Min(1) @Max(100) Integer size,
             @RequestParam(value = "direction", defaultValue = "asc") String direction
     ){
         var sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC: Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "name"));
-        return ResponseEntity.ok(productService.findAll(pageable));
+
+        return ResponseEntity.ok(productService.findWithFilters(name, type, types, categoryId, enabled, stockIssues,
+                mode, minPrice, maxPrice, inStock, pageable));
     }
 
     // Endpoint de busca de produtos por nome
