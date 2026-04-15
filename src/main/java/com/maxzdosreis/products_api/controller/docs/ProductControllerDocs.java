@@ -3,6 +3,8 @@ package com.maxzdosreis.products_api.controller.docs;
 import com.maxzdosreis.products_api.data.dto.ProductDto;
 import com.maxzdosreis.products_api.data.dto.StockMovementRequestDto;
 import com.maxzdosreis.products_api.data.dto.StockMovementResponseDto;
+import com.maxzdosreis.products_api.model.Product;
+import com.maxzdosreis.products_api.model.enums.MatchMode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Tag(name = "Product", description = "Endpoints for Managing Product")
@@ -62,6 +65,16 @@ public interface ProductControllerDocs {
 
     )
     ResponseEntity<PagedModel<EntityModel<ProductDto>>> findAll(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "type", required = false) Product.ProductType type,
+            @RequestParam(value = "types", required = false) List<Product.ProductType> types,
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
+            @RequestParam(value = "enabled", required = false) Boolean enabled,
+            @RequestParam(value = "stockIssues", required = false) Boolean stockIssues,
+            @RequestParam(value = "nameMode", defaultValue = "CONTAINS", required = false) MatchMode mode,
+            @RequestParam(value = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(value = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(value = "inStock", required = false) Boolean inStock,
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "12") Integer size,
             @RequestParam(value = "direction", defaultValue = "asc") String direction
