@@ -3,6 +3,7 @@ package com.maxzdosreis.products_api.service;
 import com.maxzdosreis.products_api.data.dto.UserRequestDTO;
 import com.maxzdosreis.products_api.data.dto.UserResponseDTO;
 import com.maxzdosreis.products_api.data.dto.security.SignUpRequestDTO;
+import com.maxzdosreis.products_api.exception.RequiredObjectIsNullException;
 import com.maxzdosreis.products_api.exception.ResourceNotFoundException;
 import com.maxzdosreis.products_api.mapper.UserMapper;
 import com.maxzdosreis.products_api.model.Permission;
@@ -82,6 +83,8 @@ public class UserService implements UserDetailsService {
     // Atualiza informações de um usuário
     @Transactional
     public UserResponseDTO updateUser(Long id, UserRequestDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
+
         User user =  userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
         if (request.getUserName() != null &&  !request.getUserName().isBlank()) {
@@ -112,7 +115,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public UserResponseDTO enableUser(Long id) {
-        logger.info("Enabling product id={}", id);
+        logger.info("Enabling user id={}", id);
 
         findUserEntityById(id);
         userRepository.enableUser(id);
@@ -122,7 +125,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public UserResponseDTO disableUser(Long id) {
-        logger.info("Disabling product id={}", id);
+        logger.info("Disabling user id={}", id);
 
         findUserEntityById(id);
         userRepository.disableUser(id);
