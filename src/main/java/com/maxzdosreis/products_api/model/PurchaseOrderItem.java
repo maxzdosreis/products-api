@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "purchase_order_items",
     indexes = {
-        @Index(name = "idx_poi_order", columnList = "purchase_orders_id"),
+        @Index(name = "idx_poi_order", columnList = "purchase_order_id"),
         @Index(name = "idx_poi_product", columnList = "product_id")
     }
 )
@@ -42,7 +42,7 @@ public class PurchaseOrderItem implements Serializable {
     @Column(name = "unit_price", nullable = false, precision = 19, scale = 2)
     private BigDecimal unitPrice;
 
-    @Column(name = "received_quantity ", precision = 19, scale = 3)
+    @Column(name = "received_quantity", precision = 19, scale = 3)
     @Builder.Default
     private BigDecimal receivedQuantity = BigDecimal.ZERO;
 
