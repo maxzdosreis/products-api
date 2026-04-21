@@ -16,6 +16,8 @@ import java.util.List;
         @Index(name = "idx_po_status", columnList = "status"),
         @Index(name = "idx_po_created_at", columnList = "created_at")
 })
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -32,6 +34,7 @@ public class PurchaseOrder implements Serializable {
     @Column(name = "supplier_name", nullable = false, length = 255)
     private String supplierName;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     @Builder.Default
     private PurchaseOrderStatus status = PurchaseOrderStatus.DRAFT;

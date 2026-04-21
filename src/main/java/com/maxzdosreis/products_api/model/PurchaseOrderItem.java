@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "purchase_order_items",
+@Table(name = "purchase_orders_items",
     indexes = {
         @Index(name = "idx_poi_order", columnList = "purchase_order_id"),
         @Index(name = "idx_poi_product", columnList = "product_id")
