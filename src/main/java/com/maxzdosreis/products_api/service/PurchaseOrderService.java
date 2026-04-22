@@ -126,6 +126,54 @@ public class PurchaseOrderService {
     }
 
     @Transactional
+    public PurchaseOrderResponseDTO update(Long id, PurchaseOrderUpdateDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
+
+        logger.info("Updating purchase order ID: {} with supplier: {}", id, request.getSupplierName());
+
+        PurchaseOrder order = findEntityById(id);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
+            throw new BadRequestException("Apenas ordens em DRAFT podem ser atualizadas. Status atual: " + order.getStatus());
+        }
+
+        // Atualiza campos somente se vierem no body
+        if (request.getSupplierName() != null && !request.getSupplierName().isBlank()) {
+            order.setSupplierName(request.getSupplierName());
+        }
+        if (request.getNotes() != null) {
+            order.setNotes(request.getNotes());
+        }
+
+        // Substitui itens somente se a lista veio no body
+        if (request.getItems() != null) {
+            if (request.getItems().isEmpty()) {
+                throw new BadRequestException("A lista de itens não pode ser vazia. Envie null para manter os itens atuais");
+            }
+            
+            validateItemsCanBeReplaced(order);
+            
+            order.getItems().clear();
+            for (PurchaseOrderItemRequestDTO itemDto : request.getItems()) {
+                Product product = productService.findEntityById(itemDto.getProductId());
+                PurchaseOrderItem item = PurchaseOrderItem.builder()
+                        .purchaseOrder(order)
+                        .product(product)
+                        .quantity(itemDto.getQuantity())
+                        .unitPrice(itemDto.getUnitPrice())
+                        .build();
+                order.getItems().add(item);
+            }
+            order.recalculateTotalAmount();
+        }
+
+        PurchaseOrderResponseDTO response = toDto(purchaseOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+    @Transactional
     public PurchaseOrderResponseDTO confirm(Long id) {
         logger.info("Confirming purchase order by ID: {}", id);
         PurchaseOrder order = findEntityById(id);
@@ -240,10 +288,45 @@ public class PurchaseOrderService {
         return response;
     }
 
-    private PurchaseOrder findEntityById(Long id) {
+    protected PurchaseOrder findEntityById(Long id) {
         logger.info("Finding purchase order by ID: {}", id);
         return purchaseOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with ID: " + id));
+    }
+
+    private void validateItemsCanBeReplaced(PurchaseOrder order) {
+        logger.warn("Validating if items can be replaced for purchase order ID: {}", order.getId_po());
+
+        // Verifica se algum item foi parcialmente recebido
+        boolean hasPartiallyReceivedItems = order.getItems().stream()
+                .anyMatch(item -> item.getReceivedQuantity() != null &&
+                        item.getReceivedQuantity().signum() > 0);
+
+        if (hasPartiallyReceivedItems) {
+            throw new BadRequestException(
+                    "Não é possível substituir itens quando há recebimentos registrados. " +
+                            "Itens com quantidade recebida não podem ser removidos. " +
+                            "Para remover itens, cancele a ordem e crie uma nova."
+            );
+        }
+
+        // Verifica status inconsistência (Safety check - não deve acontecer se a lógica está correta)
+        if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
+            throw new BadRequestException(
+                    "Estado inconsistente: ordem não está em DRAFT mas passou na validação inicial. " +
+                            "Status atual: " + order.getStatus()
+            );
+        }
+
+        // Verifica se há qualquer item com dados (quantidade não é zero)
+        boolean hasAnyItemWithQuantity = order.getItems().stream()
+                .anyMatch(item -> item.getQuantity() != null && item.getQuantity().signum() > 0);
+
+        if (!hasAnyItemWithQuantity && !order.getItems().isEmpty()) {
+            logger.warn("Warning: Order has items with zero quantity. This is unusual for DRAFT orders.");
+        }
+
+        logger.info("Items validation passed for purchase order ID: {}", order.getId_po());
     }
 
     private PurchaseOrder toEntity(PurchaseOrderRequestDTO dto) {
@@ -301,6 +384,7 @@ public class PurchaseOrderService {
         dto.add(linkTo(methodOn(PurchaseOrderController.class).findAll(null, null, null, null, null, null, null, null, null, null, 0, 12, "asc")).withRel("findAll").withType("GET"));
         dto.add(linkTo(methodOn(PurchaseOrderController.class).create(null)).withRel("create").withType("POST"));
         dto.add(linkTo(methodOn(PurchaseOrderController.class).findById(dto.getId())).withSelfRel().withType("GET"));
+        dto.add(linkTo(methodOn(PurchaseOrderController.class).update(dto.getId(), null)).withRel("update").withType("PUT"));
         dto.add(linkTo(methodOn(PurchaseOrderController.class).confirm(dto.getId())).withRel("confirm").withType("PATCH"));
         dto.add(linkTo(methodOn(PurchaseOrderController.class).receiveItems(dto.getId(), null)).withRel("receiveItems").withType("PATCH"));
         dto.add(linkTo(methodOn(PurchaseOrderController.class).cancel(dto.getId())).withRel("cancel").withType("PATCH"));

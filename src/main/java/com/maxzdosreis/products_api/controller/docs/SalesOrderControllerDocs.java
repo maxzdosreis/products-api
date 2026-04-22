@@ -1,8 +1,8 @@
 package com.maxzdosreis.products_api.controller.docs;
 
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderResponseDTO;
 import com.maxzdosreis.products_api.data.dto.SalesOrderRequestDTO;
 import com.maxzdosreis.products_api.data.dto.SalesOrderResponseDTO;
+import com.maxzdosreis.products_api.data.dto.SalesOrderUpdateDTO;
 import com.maxzdosreis.products_api.model.enums.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -100,6 +100,33 @@ public interface SalesOrderControllerDocs {
             }
     )
     ResponseEntity<SalesOrderResponseDTO> findById(@PathVariable("id") Long id);
+
+    @Operation(summary = "Updates a Sales Order",
+            description = "Updates an existing sales order with new customer information, notes, and/or items. " +
+                    "Only sales orders in DRAFT status can be updated. " +
+                    "The request body must include the order ID and the fields to be updated. " +
+                    "If items are included, they will replace the existing items for the order.",
+            tags = {"SalesOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status, already processed, or empty items array",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<SalesOrderResponseDTO> update(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody SalesOrderUpdateDTO request
+    );
 
     @Operation(summary = "Confirms a Sales Order",
             description = "Confirms a sales order by changing its status from DRAFT to CONFIRMED. Only DRAFT orders can be confirmed.",
