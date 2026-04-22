@@ -333,6 +333,7 @@ public class SalesOrderService {
                 .notes(entity.getNotes())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .confirmedAt(entity.getConfirmedAt())
                 .shippedAt(entity.getShippedAt())
                 .deliveredAt(entity.getDeliveredAt())
                 .items(items)
@@ -343,7 +344,7 @@ public class SalesOrderService {
         dto.add(linkTo(methodOn(SalesOrderController.class).findAll(null, null, null, null, null, null, null, null, null, null, 0, 12, "asc")).withRel("findAll").withType("GET"));
         dto.add(linkTo(methodOn(SalesOrderController.class).create(null)).withRel("create").withType("POST"));
         dto.add(linkTo(methodOn(SalesOrderController.class).findById(dto.getId())).withSelfRel().withType("GET"));
-        dto.add(linkTo(methodOn(PurchaseOrderController.class).update(dto.getId(), null)).withRel("update").withType("PUT"));
+        dto.add(linkTo(methodOn(SalesOrderController.class).update(dto.getId(), null)).withRel("update").withType("PUT"));
         dto.add(linkTo(methodOn(SalesOrderController.class).confirm(dto.getId())).withRel("confirm").withType("PATCH"));
         dto.add(linkTo(methodOn(SalesOrderController.class).ship(dto.getId())).withRel("ship").withType("PATCH"));
         dto.add(linkTo(methodOn(SalesOrderController.class).deliver(dto.getId())).withRel("deliver").withType("PATCH"));
