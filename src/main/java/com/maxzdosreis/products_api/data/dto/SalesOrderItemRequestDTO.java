@@ -21,9 +21,11 @@ public class SalesOrderItemRequestDTO implements Serializable {
 
     @NotNull(message = "Quantidade é obrigatória")
     @DecimalMin(value = "0.001", message = "Quantidade deve maior que zero")
+    @JsonProperty("quantity")
     private BigDecimal quantity;
 
     @NotNull(message = "Preço unitário é obrigatório")
     @DecimalMin(value = "0.01", message = "Preço unitário deve ser maior que zero")
+    @JsonProperty("unit_price")
     private BigDecimal unitPrice;
 }
