@@ -3,6 +3,7 @@ package com.maxzdosreis.products_api.controller.docs;
 import com.maxzdosreis.products_api.data.dto.PurchaseOrderItemRequestDTO;
 import com.maxzdosreis.products_api.data.dto.PurchaseOrderRequestDTO;
 import com.maxzdosreis.products_api.data.dto.PurchaseOrderResponseDTO;
+import com.maxzdosreis.products_api.data.dto.PurchaseOrderUpdateDTO;
 import com.maxzdosreis.products_api.model.enums.MatchMode;
 import com.maxzdosreis.products_api.model.enums.PurchaseOrderDateType;
 import com.maxzdosreis.products_api.model.enums.PurchaseOrderStatus;
@@ -102,6 +103,33 @@ public interface PurchaseOrderControllerDocs {
             }
     )
     ResponseEntity<PurchaseOrderResponseDTO> findById(@PathVariable("id") Long id);
+
+    @Operation(summary = "Updates a Purchase Order",
+            description = "Updates an existing purchase order with new supplier information, notes, and/or items. " +
+                    "Only DRAFT orders can be updated. Items can only be replaced if no partial receipts exist. " +
+                    "When items are provided, all current items are replaced with the new list and the total amount is recalculated. " +
+                    "To update only metadata (supplier name or notes), provide null for items field. ",
+            tags = {"PurchaseOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = PurchaseOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status, has partially received items, or empty items array",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<PurchaseOrderResponseDTO> update(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody PurchaseOrderUpdateDTO request
+    );
 
     @Operation(summary = "Confirms a Purchase Order",
             description = "Confirms a purchase order by changing its status from DRAFT to CONFIRMED. Only DRAFT orders can be confirmed.",
