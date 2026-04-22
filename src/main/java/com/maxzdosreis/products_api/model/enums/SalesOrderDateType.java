@@ -6,7 +6,7 @@ public enum SalesOrderDateType {
     UPDATED("updatedAt"),
     CONFIRMED("confirmedAt"),
     SHIPPED("shippedAt"),
-    DELIVERED("deliveredAt");
+    RECEIVED("deliveredAt");
 
     private final String fieldName;
 

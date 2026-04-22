@@ -188,7 +188,7 @@ public class ProductService {
         productRepository.delete(findEntityById(id));
     }
 
-    private Product findEntityById(Long id) {
+    protected Product findEntityById(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com ID: " + id));
     }

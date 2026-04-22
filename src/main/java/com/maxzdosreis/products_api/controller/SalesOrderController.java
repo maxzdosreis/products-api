@@ -1,9 +1,6 @@
 package com.maxzdosreis.products_api.controller;
 
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderRequestDTO;
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderResponseDTO;
-import com.maxzdosreis.products_api.data.dto.SalesOrderRequestDTO;
-import com.maxzdosreis.products_api.data.dto.SalesOrderResponseDTO;
+import com.maxzdosreis.products_api.data.dto.*;
 import com.maxzdosreis.products_api.model.enums.*;
 import com.maxzdosreis.products_api.serialization.converter.CustomMediaTypes;
 import com.maxzdosreis.products_api.service.SalesOrderService;
@@ -78,6 +75,16 @@ public class SalesOrderController {
     )
     public ResponseEntity<SalesOrderResponseDTO> findById(@PathVariable("id") Long id){
         return ResponseEntity.ok(salesOrderService.findById(id));
+    }
+
+    // Endpoint para alteração de order
+    @PatchMapping(value = "/{id}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<SalesOrderResponseDTO> update(@PathVariable("id") Long id, @RequestBody @Valid SalesOrderUpdateDTO request){
+        return ResponseEntity.ok(salesOrderService.update(id, request));
     }
 
     // Endpoint de confirmação de salesOrder

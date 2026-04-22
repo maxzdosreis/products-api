@@ -64,7 +64,7 @@ public class SalesOrderService {
         logger.info("Sales order created with ID: {}", savedOrder.getId());
 
         SalesOrderResponseDTO response = toDto(savedOrder);
-        // TODO: add HATEOAS links
+        addHateoasLinks(response);
         return response;
     }
 
@@ -117,9 +117,60 @@ public class SalesOrderService {
     public SalesOrderResponseDTO findById(Long id) {
         logger.info("Finding purchase order by ID: {}", id);
         SalesOrderResponseDTO response = toDto(findEntityById(id));
-        // TODO: add HATEOAS links
+        addHateoasLinks(response);
         return response;
     }
+
+    @Transactional
+    public SalesOrderResponseDTO update (Long id, SalesOrderUpdateDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
+
+        logger.info("Updating sales order with ID: {}", id);
+
+        SalesOrder order = findEntityById(id);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        if (order.getStatus() != SalesOrderStatus.DRAFT) {
+            throw new BadRequestException("Apenas ordens em DRAFT podem ser atualizadas. Status atual: " + order.getStatus());
+        }
+
+        // Atualiza campos somente se enviar no body
+        if (request.getCustomerName() != null && !request.getCustomerName().isBlank()) {
+            order.setCustomerName(request.getCustomerName());
+        }
+
+        if (request.getNotes() != null) {
+            order.setNotes(request.getNotes());
+        }
+
+        // Substitui itens somente se a lista veio no body
+        if (request.getItems() != null) {
+            if (request.getItems().isEmpty()) {
+                throw new BadRequestException("A lista de itens não pode ser vazia. Envie null para manter os itens atuais.");
+            }
+
+            validateItemsCanBeReplaced(order);
+            
+            order.getItems().clear();
+            for (SalesOrderItemRequestDTO itemDto : request.getItems()) {
+                Product product = productService.findEntityById(itemDto.getProductId());
+                SalesOrderItem item = SalesOrderItem.builder()
+                        .salesOrder(order)
+                        .product(product)
+                        .quantity(itemDto.getQuantity())
+                        .unitPrice(itemDto.getUnitPrice())
+                        .build();
+                order.getItems().add(item);
+            }
+            order.recalculateTotalAmount();
+        }
+
+        SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+
 
     // Ao confirmar, dispara SAIDA no estoque para cada item
     @Transactional
@@ -147,7 +198,7 @@ public class SalesOrderService {
         order.setStatus(SalesOrderStatus.CONFIRMED);
         order.setConfirmedAt(LocalDateTime.now());
         SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
-        // TODO: add HATEOAS links
+        addHateoasLinks(response);
         return response;
     }
 
@@ -163,7 +214,7 @@ public class SalesOrderService {
         order.setStatus(SalesOrderStatus.SHIPPED);
         order.setShippedAt(LocalDateTime.now());
         SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
-        // TODO: add HATEOAS links
+        addHateoasLinks(response);
         return response;
     }
 
@@ -179,7 +230,7 @@ public class SalesOrderService {
         order.setStatus(SalesOrderStatus.DELIVERED);
         order.setDeliveredAt(LocalDateTime.now());
         SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
-        // TODO: add HATEOAS links
+        addHateoasLinks(response);
         return response;
     }
 
@@ -210,14 +261,33 @@ public class SalesOrderService {
 
         order.setStatus(SalesOrderStatus.CANCELLED);
         SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
-        // TODO: add HATEOAS links
+        addHateoasLinks(response);
         return response;
     }
 
-    private SalesOrder findEntityById(Long id) {
+    protected SalesOrder findEntityById(Long id) {
         logger.info("Finding sales order by ID: {}", id);
         return salesOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sales order not found with ID: " + id));
+    }
+
+    private void validateItemsCanBeReplaced(SalesOrder order) {
+        logger.warn("Validating if items can be replaced for order ID: {}", order.getId());
+
+        if (!order.getItems().isEmpty()) {
+            boolean hasAnyItemWithData = order.getItems().stream()
+                    .anyMatch(item -> item.getQuantity() != null && item.getQuantity().signum() > 0);
+
+            if (hasAnyItemWithData && order.getStatus() != SalesOrderStatus.DRAFT) {
+                throw new BadRequestException(
+                        "Não é possível substituir itens de uma ordem que já foi processada. " +
+                                "Status atual: " + order.getStatus() + ". " +
+                                "Para remover itens, cancele a ordem e crie uma nova."
+                );
+            }
+        }
+
+        logger.info("Items validation passed for order ID: {}", order.getId());
     }
 
     private SalesOrder toEntity(SalesOrderRequestDTO dto) {
@@ -273,6 +343,7 @@ public class SalesOrderService {
         dto.add(linkTo(methodOn(SalesOrderController.class).findAll(null, null, null, null, null, null, null, null, null, null, 0, 12, "asc")).withRel("findAll").withType("GET"));
         dto.add(linkTo(methodOn(SalesOrderController.class).create(null)).withRel("create").withType("POST"));
         dto.add(linkTo(methodOn(SalesOrderController.class).findById(dto.getId())).withSelfRel().withType("GET"));
+        dto.add(linkTo(methodOn(PurchaseOrderController.class).update(dto.getId(), null)).withRel("update").withType("PUT"));
         dto.add(linkTo(methodOn(SalesOrderController.class).confirm(dto.getId())).withRel("confirm").withType("PATCH"));
         dto.add(linkTo(methodOn(SalesOrderController.class).ship(dto.getId())).withRel("ship").withType("PATCH"));
         dto.add(linkTo(methodOn(SalesOrderController.class).deliver(dto.getId())).withRel("deliver").withType("PATCH"));

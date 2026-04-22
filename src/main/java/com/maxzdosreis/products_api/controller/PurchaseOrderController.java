@@ -1,9 +1,6 @@
 package com.maxzdosreis.products_api.controller;
 
-import com.maxzdosreis.products_api.data.dto.ProductDto;
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderItemRequestDTO;
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderRequestDTO;
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderResponseDTO;
+import com.maxzdosreis.products_api.data.dto.*;
 import com.maxzdosreis.products_api.model.enums.MatchMode;
 import com.maxzdosreis.products_api.model.enums.PurchaseOrderDateType;
 import com.maxzdosreis.products_api.model.enums.PurchaseOrderStatus;
@@ -81,6 +78,16 @@ public class PurchaseOrderController {
     )
     public ResponseEntity<PurchaseOrderResponseDTO> findById(@PathVariable("id") Long id){
         return ResponseEntity.ok(purchaseOrderService.findById(id));
+    }
+
+    // Endpoint para alteração de order
+    @PatchMapping(value = "/{id}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderResponseDTO> update(@PathVariable("id") Long id, @RequestBody @Valid PurchaseOrderUpdateDTO request){
+        return ResponseEntity.ok(purchaseOrderService.update(id, request));
     }
 
     // Endpoint de confirmação de purchaseOrder
