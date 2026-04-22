@@ -120,6 +120,23 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "MANAGER")
                                 .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasAnyRole("ADMIN", "MANAGER")
                                 .requestMatchers(HttpMethod.GET, "/api/products/**").hasAnyRole("ADMIN", "MANAGER", "USER")
+
+                                // Regras para endpoints de categories
+                                .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.GET, "/api/categories/**").hasAnyRole("ADMIN", "MANAGER", "USER")
+
+                                // Regras para endpoints de purchaseOrder
+                                .requestMatchers(HttpMethod.POST, "/api/purchase-orders/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.PATCH, "/api/purchase-orders/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.GET, "/api/purchase-orders/**").hasAnyRole("ADMIN", "MANAGER", "USER")
+
+                                // Regras para endpoints de salesOrder
+                                .requestMatchers(HttpMethod.POST, "/api/sales-orders/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.PATCH, "/api/sales-orders/**").hasAnyRole("ADMIN", "MANAGER")
+                                .requestMatchers(HttpMethod.GET, "/api/sales-orders/**").hasAnyRole("ADMIN", "MANAGER", "USER")
                                 .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
