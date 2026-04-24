@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "purchase_orders_items",
+@Table(name = "purchase_order_items",
     indexes = {
         @Index(name = "idx_poi_order", columnList = "purchase_order_id"),
         @Index(name = "idx_poi_product", columnList = "product_id")
@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id_poi")
+@EqualsAndHashCode(of = "idPoi")
 @ToString(exclude = {"purchaseOrder", "product"})
 public class PurchaseOrderItem implements Serializable {
 
@@ -26,7 +26,8 @@ public class PurchaseOrderItem implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_poi;
+    @Column(name = "id_poi", nullable = false)
+    private Long idPoi;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "purchase_order_id", nullable = false)

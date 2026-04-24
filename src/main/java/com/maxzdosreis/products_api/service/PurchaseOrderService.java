@@ -356,7 +356,7 @@ public class PurchaseOrderService {
     private PurchaseOrderResponseDTO toDto(PurchaseOrder entity) {
         List<PurchaseOrderItemResponseDTO> itemsDto = entity.getItems().stream()
                 .map(item -> PurchaseOrderItemResponseDTO.builder()
-                        .id(item.getId_poi())
+                        .id(item.getIdPoi())
                         .productId(item.getProduct().getId())
                         .productName(item.getProduct().getName())
                         .quantity(item.getQuantity())
