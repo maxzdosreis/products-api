@@ -80,14 +80,51 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(purchaseOrderService.findById(id));
     }
 
-    // Endpoint para alteração de order
+    // Endpoint para alteração de order (substitui todos os itens informados)
+    @PatchMapping(value = "/{id}/items",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderResponseDTO> update(@PathVariable("id") Long id, @Valid @RequestBody PurchaseOrderUpdateDTO request){
+        return ResponseEntity.ok(purchaseOrderService.update(id, request));
+    }
+
+    // Endpoint para alteração de order (somente o cabeçalho)
     @PatchMapping(value = "/{id}",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<PurchaseOrderResponseDTO> update(@PathVariable("id") Long id, @RequestBody @Valid PurchaseOrderUpdateDTO request){
-        return ResponseEntity.ok(purchaseOrderService.update(id, request));
+    public ResponseEntity<PurchaseOrderResponseDTO> partialUpdate(@PathVariable("id") Long id, @Valid @RequestBody PurchaseOrderPartialUpdateDTO request){
+        return ResponseEntity.ok(purchaseOrderService.partialUpdate(id, request));
+    }
+
+    // Endpoint para adição de itens na order
+    @PostMapping(value = "/{id}/items",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderResponseDTO> addItem(@PathVariable("id") Long id, @Valid @RequestBody PurchaseOrderItemRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(purchaseOrderService.addItem(id, request));
+    }
+
+    // Endpoint para alteração de itens na order
+    @PutMapping(value = "/{id}/items/{itemId}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderResponseDTO> updateItem(@PathVariable("id") Long id, @PathVariable("itemId") Long itemId, @Valid @RequestBody PurchaseOrderItemRequestDTO request) {
+        return ResponseEntity.ok(purchaseOrderService.updateItem(id, itemId, request));
+    }
+
+    // Endpoint para alteração de itens na order
+    @DeleteMapping(value = "/{id}/items/{itemId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderResponseDTO> deleteItem(@PathVariable("id") Long id, @PathVariable("itemId") Long itemId) {
+        return ResponseEntity.ok(purchaseOrderService.deleteItem(id, itemId));
     }
 
     // Endpoint de confirmação de purchaseOrder

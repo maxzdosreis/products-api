@@ -174,6 +174,121 @@ public class PurchaseOrderService {
     }
 
     @Transactional
+    public PurchaseOrderResponseDTO partialUpdate(Long id, PurchaseOrderPartialUpdateDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
+
+        logger.info("Updating purchase order ID: {} with supplier: {}", id, request.getSupplierName());
+
+        PurchaseOrder order = findEntityById(id);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
+            throw new BadRequestException("Apenas ordens em DRAFT podem ser atualizadas. Status atual: " + order.getStatus());
+        }
+
+        // Atualiza campos somente se vierem no body
+        if (request.getSupplierName() != null && !request.getSupplierName().isBlank()) {
+            order.setSupplierName(request.getSupplierName());
+        }
+        if (request.getNotes() != null) {
+            order.setNotes(request.getNotes());
+        }
+
+        PurchaseOrderResponseDTO response = toDto(purchaseOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+    @Transactional
+    public PurchaseOrderResponseDTO addItem(Long id, PurchaseOrderItemRequestDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
+
+        logger.info("Adding item to purchase order ID: {}", id);
+
+        PurchaseOrder order = findEntityById(id);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
+            throw new BadRequestException("Itens só podem ser adicionados em orders com status DRAFT. Status atual: " + order.getStatus());
+        }
+
+        // Verifica se o produto já existe na ordem
+        Product product = productService.findEntityById(request.getProductId());
+        boolean itemExists = order.getItems().stream()
+                .anyMatch(i -> i.getProduct().getId().equals(request.getProductId()));
+
+        if(itemExists) {
+            throw new BadRequestException("Product id= " + product.getId() + " já existe na ordem. use o endpoint de atualização de item para alterar a quantidade.");
+        }
+
+        PurchaseOrderItem item = PurchaseOrderItem.builder()
+                .purchaseOrder(order)
+                .product(product)
+                .quantity(request.getQuantity())
+                .unitPrice(request.getUnitPrice())
+                .build();
+
+        order.getItems().add(item);
+        order.recalculateTotalAmount();
+        PurchaseOrderResponseDTO response = toDto(purchaseOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+    @Transactional
+    public PurchaseOrderResponseDTO updateItem (Long orderId, Long id, PurchaseOrderItemRequestDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
+
+        logger.info("Updating item to purchase order: {}", orderId);
+
+        PurchaseOrder order = findEntityById(orderId);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
+            throw new BadRequestException("Itens só podem ser atualizados em orders com status DRAFT. Status atual: " + order.getStatus());
+        }
+
+        PurchaseOrderItem item = order.getItems().stream()
+                .filter(i -> i.getIdPoi().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Item=" + id + " não encontrado na ordem id=" + orderId));
+
+        item.setQuantity(request.getQuantity());
+        item.setUnitPrice(request.getUnitPrice());
+        order.recalculateTotalAmount();
+        PurchaseOrderResponseDTO response = toDto(purchaseOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+    @Transactional
+    public PurchaseOrderResponseDTO deleteItem(Long orderId, Long id) {
+        logger.info("Deleting item to purchase order: {}", orderId);
+
+        PurchaseOrder order = findEntityById(orderId);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        if (order.getStatus() != PurchaseOrderStatus.DRAFT) {
+            throw new BadRequestException("Itens só podem ser removidos de orders com status DRAFT. Status atual: " + order.getStatus());
+        }
+
+        PurchaseOrderItem item = order.getItems().stream()
+                .filter(i -> i.getIdPoi().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Item=" + id + " não encontrado na ordem id=" + orderId));
+
+        if (order.getItems().size() == 1) {
+            throw new BadRequestException("A ordem deve conter pelo menos um item. Delete a ordem inteira se necessário.");
+        }
+
+        order.getItems().remove(item);
+        order.recalculateTotalAmount();
+        PurchaseOrderResponseDTO response = toDto(purchaseOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+    @Transactional
     public PurchaseOrderResponseDTO confirm(Long id) {
         logger.info("Confirming purchase order by ID: {}", id);
         PurchaseOrder order = findEntityById(id);
