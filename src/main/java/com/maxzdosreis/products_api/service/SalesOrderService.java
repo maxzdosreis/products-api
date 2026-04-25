@@ -122,7 +122,7 @@ public class SalesOrderService {
     }
 
     @Transactional
-    public SalesOrderResponseDTO update (Long id, SalesOrderUpdateDTO request) {
+    public SalesOrderResponseDTO update(Long id, SalesOrderUpdateDTO request) {
         if (request == null) throw new RequiredObjectIsNullException();
 
         logger.info("Updating sales order with ID: {}", id);
@@ -130,9 +130,7 @@ public class SalesOrderService {
         SalesOrder order = findEntityById(id);
 
         // Só deve ser possível editar orders que estão em DRAFT
-        if (order.getStatus() != SalesOrderStatus.DRAFT) {
-            throw new BadRequestException("Apenas ordens em DRAFT podem ser atualizadas. Status atual: " + order.getStatus());
-        }
+        validateStatusDraftOrder(order);
 
         // Atualiza campos somente se enviar no body
         if (request.getCustomerName() != null && !request.getCustomerName().isBlank()) {
@@ -170,7 +168,117 @@ public class SalesOrderService {
         return response;
     }
 
+    @Transactional
+    public SalesOrderResponseDTO partialUpdate(Long id, SalesOrderPartialUpdateDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
 
+        logger.info("Updating sales order with ID: {}", id);
+
+        SalesOrder order = findEntityById(id);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        validateStatusDraftOrder(order);
+
+        // Atualiza campos somente se enviar no body
+        if (request.getCustomerName() != null && !request.getCustomerName().isBlank()) {
+            order.setCustomerName(request.getCustomerName());
+        }
+
+        if(request.getNotes() != null) {
+            order.setNotes(request.getNotes());
+        }
+
+        SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+    @Transactional
+    public SalesOrderResponseDTO addItem(Long id, SalesOrderItemRequestDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
+
+        logger.info("Adding item to sales order with ID: {}", id);
+
+        SalesOrder order = findEntityById(id);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        validateStatusDraftOrder(order);
+
+        // Verifica se o item já existe na ordem
+        Product product = productService.findEntityById(request.getProductId());
+        boolean itemExists = order.getItems().stream()
+                .anyMatch(i -> i.getProduct().getId().equals(product.getId()));
+
+        if (itemExists) {
+            throw new BadRequestException("Product id= " + product.getId() + " já existe na ordem. Use o endpoint de atualização de item para alterar a quantidade.");
+        }
+
+        SalesOrderItem item = SalesOrderItem.builder()
+                .salesOrder(order)
+                .product(product)
+                .quantity(request.getQuantity())
+                .unitPrice(request.getUnitPrice())
+                .build();
+
+        order.getItems().add(item);
+        order.recalculateTotalAmount();
+        SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+    @Transactional
+    public SalesOrderResponseDTO updateItem(Long orderId, Long itemId, SalesOrderItemRequestDTO request) {
+        if (request == null) throw new RequiredObjectIsNullException();
+
+        logger.info("Updating item to sales order with ID: {}", orderId);
+
+        SalesOrder order = findEntityById(orderId);
+
+        if (request.getProductId().compareTo(itemId) != 0) {
+            throw new BadRequestException("O ID do produto no path deve ser igual ao ID do produto no body.");
+        }
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        validateStatusDraftOrder(order);
+
+        SalesOrderItem item = order.getItems().stream()
+                .filter(i -> i.getProduct().getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Item=" + itemId + " não encontrado na ordem id=" + orderId));
+
+        item.setQuantity(request.getQuantity());
+        item.setUnitPrice(request.getUnitPrice());
+        order.recalculateTotalAmount();
+        SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
+
+    @Transactional
+    public SalesOrderResponseDTO deleteItem(Long orderId, Long itemId) {
+        logger.info("Deleting item to sales order with ID: {}", orderId);
+
+        SalesOrder order = findEntityById(orderId);
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        validateStatusDraftOrder(order);
+
+        SalesOrderItem item = order.getItems().stream()
+                .filter(i -> i.getProduct().getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Item=" + itemId + " não encontrado na ordem id=" + orderId));
+
+        if (order.getItems().size() == 1) {
+            throw new BadRequestException("A ordem deve conter pelo menos um item. Delete a ordem inteira se necessário.");
+        }
+
+        order.getItems().remove(item);
+        order.recalculateTotalAmount();
+        SalesOrderResponseDTO response = toDto(salesOrderRepository.save(order));
+        addHateoasLinks(response);
+        return response;
+    }
 
     // Ao confirmar, dispara SAIDA no estoque para cada item
     @Transactional
@@ -178,9 +286,9 @@ public class SalesOrderService {
         logger.info("Confirming sales order id={}", id);
         SalesOrder order = findEntityById(id);
 
-        if (order.getStatus() != SalesOrderStatus.DRAFT) {
-            throw new BadRequestException("Apenas ordens em DRAFT podem ser confirmadas. Status atual: " + order.getStatus());
-        }
+
+        // Só deve ser possível editar orders que estão em DRAFT
+        validateStatusDraftOrder(order);
 
         if (order.getItems().isEmpty()) {
             throw new BadRequestException("O pedido não pode ser confirmado sem itens.");
@@ -269,6 +377,12 @@ public class SalesOrderService {
         logger.info("Finding sales order by ID: {}", id);
         return salesOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sales order not found with ID: " + id));
+    }
+
+    private void validateStatusDraftOrder(SalesOrder order) {
+        if (order.getStatus() != SalesOrderStatus.DRAFT) {
+            throw new BadRequestException("Apenas ordens em DRAFT podem ser confirmadas. Status atual: " + order.getStatus());
+        }
     }
 
     private void validateItemsCanBeReplaced(SalesOrder order) {
