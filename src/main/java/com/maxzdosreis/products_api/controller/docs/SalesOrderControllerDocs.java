@@ -3,6 +3,8 @@ package com.maxzdosreis.products_api.controller.docs;
 import com.maxzdosreis.products_api.data.dto.SalesOrderRequestDTO;
 import com.maxzdosreis.products_api.data.dto.SalesOrderResponseDTO;
 import com.maxzdosreis.products_api.data.dto.SalesOrderUpdateDTO;
+import com.maxzdosreis.products_api.data.dto.SalesOrderPartialUpdateDTO;
+import com.maxzdosreis.products_api.data.dto.SalesOrderItemRequestDTO;
 import com.maxzdosreis.products_api.model.enums.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -104,8 +106,8 @@ public interface SalesOrderControllerDocs {
     @Operation(summary = "Updates a Sales Order",
             description = "Updates an existing sales order with new customer information, notes, and/or items. " +
                     "Only sales orders in DRAFT status can be updated. " +
-                    "The request body must include the order ID and the fields to be updated. " +
-                    "If items are included, they will replace the existing items for the order.",
+                    "When items are provided, all current items are replaced with the new list and the total amount is recalculated. " +
+                    "To update only metadata (customer name or notes), provide null for items field.",
             tags = {"SalesOrder"},
             responses = {
                     @ApiResponse(
@@ -114,7 +116,7 @@ public interface SalesOrderControllerDocs {
                             content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
                     ),
                     @ApiResponse(
-                            description = "Bad Request - Order not in DRAFT status, already processed, or empty items array",
+                            description = "Bad Request - Order not in DRAFT status, already confirmed, or empty items array",
                             responseCode = "400",
                             content = @Content
                     ),
@@ -126,6 +128,115 @@ public interface SalesOrderControllerDocs {
     ResponseEntity<SalesOrderResponseDTO> update(
             @PathVariable("id") Long id,
             @Valid @RequestBody SalesOrderUpdateDTO request
+    );
+
+    @Operation(summary = "Partial Updates a Sales Order",
+            description = "Partial Updates an existing sales order with new customer information and/or notes. " +
+                    "Only DRAFT orders can be updated. " +
+                    "To update only metadata (customer name or notes).",
+            tags = {"SalesOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status or already confirmed",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<SalesOrderResponseDTO> partialUpdate(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody SalesOrderPartialUpdateDTO request
+    );
+
+    @Operation(summary = "Adds an Item to a Sales Order",
+            description = "Adds a new item (product) to an existing sales order. " +
+                    "Only DRAFT orders can have new items added. " +
+                    "The product must exist and the total amount is recalculated after adding the item. " +
+                    "Returns the updated sales order with all items.",
+            tags = {"SalesOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Created - Item successfully added",
+                            responseCode = "201",
+                            content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status or product not found",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID or product not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<SalesOrderResponseDTO> addItem(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody SalesOrderItemRequestDTO request
+    );
+
+    @Operation(summary = "Updates an Item in a Sales Order",
+            description = "Updates an existing item (product quantity and/or price) in a sales order. " +
+                    "Only DRAFT orders can have items updated. " +
+                    "The item must exist in the order and the total amount is recalculated after updating. " +
+                    "Returns the updated sales order with all modified items.",
+            tags = {"SalesOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success - Item successfully updated",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status or item not found in order",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID or item ID not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<SalesOrderResponseDTO> updateItem(
+            @PathVariable("id") Long id,
+            @PathVariable("itemId") Long itemId,
+            @Valid @RequestBody SalesOrderItemRequestDTO request
+    );
+
+    @Operation(summary = "Removes an Item from a Sales Order",
+            description = "Removes a specific item from a sales order. " +
+                    "Only DRAFT orders can have items removed. " +
+                    "The item must exist in the order and the total amount is recalculated after removal. " +
+                    "The order must have at least one item remaining after deletion. " +
+                    "Returns the updated sales order with remaining items.",
+            tags = {"SalesOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success - Item successfully removed",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status, item not found, or last item cannot be removed",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID or item ID not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<SalesOrderResponseDTO> deleteItem(
+            @PathVariable("id") Long id,
+            @PathVariable("itemId") Long itemId
     );
 
     @Operation(summary = "Confirms a Sales Order",
@@ -145,8 +256,10 @@ public interface SalesOrderControllerDocs {
     )
     ResponseEntity<SalesOrderResponseDTO> confirm(@PathVariable("id") Long id);
 
-    @Operation(summary = "Sends a Sales Order",
-            description = "Sends a Sales order.",
+    @Operation(summary = "Ships a Sales Order",
+            description = "Ships a sales order by changing its status from CONFIRMED to SHIPPED. " +
+                    "Only CONFIRMED orders can be shipped. " +
+                    "Sets the shipment date and prepares the order for delivery.",
             tags = {"SalesOrder"},
             responses = {
                     @ApiResponse(
@@ -154,16 +267,22 @@ public interface SalesOrderControllerDocs {
                             responseCode = "200",
                             content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
                     ),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in CONFIRMED status",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID not found", responseCode = "404", content = @Content),
                     @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
     ResponseEntity<SalesOrderResponseDTO> ship(@PathVariable("id") Long id);
 
-    @Operation(summary = "Delivery a Sales Order",
-            description = "Delivery a Sales order.",
+    @Operation(summary = "Delivers a Sales Order",
+            description = "Delivers a sales order by changing its status from SHIPPED to DELIVERED. " +
+                    "Only SHIPPED orders can be delivered. " +
+                    "Sets the delivery date and marks the order as complete.",
             tags = {"SalesOrder"},
             responses = {
                     @ApiResponse(
@@ -171,16 +290,23 @@ public interface SalesOrderControllerDocs {
                             responseCode = "200",
                             content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
                     ),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in SHIPPED status",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID not found", responseCode = "404", content = @Content),
                     @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )
     ResponseEntity<SalesOrderResponseDTO> deliver(@PathVariable("id") Long id);
 
     @Operation(summary = "Cancels a Sales Order",
-            description = "Cancels a Sales order. Only orders that are not RECEIVED and have no received items can be cancelled.",
+            description = "Cancels a sales order. " +
+                    "Orders that are already DELIVERED cannot be cancelled. " +
+                    "Orders that are CONFIRMED or SHIPPED will trigger automatic stock reversal (ENTRADA) when cancelled. " +
+                    "DRAFT orders can be cancelled without stock reversal.",
             tags = {"SalesOrder"},
             responses = {
                     @ApiResponse(
@@ -188,9 +314,13 @@ public interface SalesOrderControllerDocs {
                             responseCode = "200",
                             content = @Content(schema = @Schema(implementation = SalesOrderResponseDTO.class))
                     ),
-                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-                    @ApiResponse(description = "Unathorized", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(
+                            description = "Bad Request - Order already DELIVERED or already CANCELLED",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID not found", responseCode = "404", content = @Content),
                     @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
             }
     )

@@ -78,13 +78,50 @@ public class SalesOrderController {
     }
 
     // Endpoint para alteração de order
-    @PatchMapping(value = "/{id}",
+    @PatchMapping(value = "/{id}/items",
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<SalesOrderResponseDTO> update(@PathVariable("id") Long id, @RequestBody @Valid SalesOrderUpdateDTO request){
         return ResponseEntity.ok(salesOrderService.update(id, request));
+    }
+
+    // Endpoint para alteração de order (somente o cabeçalho)
+    @PatchMapping(value = "/{id}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<SalesOrderResponseDTO> partialUpdate(@PathVariable("id") Long id, @Valid @RequestBody SalesOrderPartialUpdateDTO request){
+        return ResponseEntity.ok(salesOrderService.partialUpdate(id, request));
+    }
+
+    // Endpoint para adição de itens na order
+    @PostMapping(value = "/{id}/items",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<SalesOrderResponseDTO> addItem(@PathVariable("id") Long id, @Valid @RequestBody SalesOrderItemRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(salesOrderService.addItem(id, request));
+    }
+
+    // Endpoint para alteração de itens na order
+    @PutMapping(value = "/{id}/items/{itemId}",
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, CustomMediaTypes.APPLICATION_YAML_VALUE}
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<SalesOrderResponseDTO> updateItem(@PathVariable("id") Long id, @PathVariable("itemId") Long itemId, @Valid @RequestBody SalesOrderItemRequestDTO request) {
+        return ResponseEntity.ok(salesOrderService.updateItem(id, itemId, request));
+    }
+
+    // Endpoint para alteração de itens na order
+    @DeleteMapping(value = "/{id}/items/{itemId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<SalesOrderResponseDTO> deleteItem(@PathVariable("id") Long id, @PathVariable("itemId") Long itemId) {
+        return ResponseEntity.ok(salesOrderService.deleteItem(id, itemId));
     }
 
     // Endpoint de confirmação de salesOrder
