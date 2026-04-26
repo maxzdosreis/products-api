@@ -235,7 +235,7 @@ public class SalesOrderService {
 
         SalesOrder order = findEntityById(orderId);
 
-        if (request.getProductId().compareTo(itemId) != 0) {
+        if (!request.getProductId().equals(itemId)) {
             throw new BadRequestException("O ID do produto no path deve ser igual ao ID do produto no body.");
         }
 
