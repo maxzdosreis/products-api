@@ -1,9 +1,6 @@
 package com.maxzdosreis.products_api.controller.docs;
 
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderItemRequestDTO;
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderRequestDTO;
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderResponseDTO;
-import com.maxzdosreis.products_api.data.dto.PurchaseOrderUpdateDTO;
+import com.maxzdosreis.products_api.data.dto.*;
 import com.maxzdosreis.products_api.model.enums.MatchMode;
 import com.maxzdosreis.products_api.model.enums.PurchaseOrderDateType;
 import com.maxzdosreis.products_api.model.enums.PurchaseOrderStatus;
@@ -129,6 +126,115 @@ public interface PurchaseOrderControllerDocs {
     ResponseEntity<PurchaseOrderResponseDTO> update(
             @PathVariable("id") Long id,
             @Valid @RequestBody PurchaseOrderUpdateDTO request
+    );
+
+    @Operation(summary = "Partial Updates a Purchase Order",
+            description = "Partial Updates an existing purchase order with new supplier information and/or notes. " +
+                    "Only DRAFT orders can be updated. " +
+                    "To update only metadata (supplier name or notes). ",
+            tags = {"PurchaseOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = PurchaseOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status, has partially received items",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<PurchaseOrderResponseDTO> partialUpdate(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody PurchaseOrderPartialUpdateDTO request
+    );
+
+    @Operation(summary = "Adds an Item to a Purchase Order",
+            description = "Adds a new item (product) to an existing purchase order. " +
+                    "Only DRAFT orders can have new items added. " +
+                    "The product must exist and the total amount is recalculated after adding the item. " +
+                    "Returns the updated purchase order with all items.",
+            tags = {"PurchaseOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Created - Item successfully added",
+                            responseCode = "201",
+                            content = @Content(schema = @Schema(implementation = PurchaseOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status or product not found",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID or product not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<PurchaseOrderResponseDTO> addItem(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody PurchaseOrderItemRequestDTO request
+    );
+
+    @Operation(summary = "Updates an Item in a Purchase Order",
+            description = "Updates an existing item (product quantity and/or price) in a purchase order. " +
+                    "Only DRAFT orders can have items updated. " +
+                    "The item must exist in the order and the total amount is recalculated after updating. " +
+                    "Returns the updated purchase order with all modified items.",
+            tags = {"PurchaseOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success - Item successfully updated",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = PurchaseOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status or item not found in order",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID or item ID not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<PurchaseOrderResponseDTO> updateItem(
+            @PathVariable("id") Long id,
+            @PathVariable("itemId") Long itemId,
+            @Valid @RequestBody PurchaseOrderItemRequestDTO request
+    );
+
+    @Operation(summary = "Removes an Item from a Purchase Order",
+            description = "Removes a specific item from a purchase order. " +
+                    "Only DRAFT orders can have items removed. " +
+                    "The item must exist in the order and the total amount is recalculated after removal. " +
+                    "The order must have at least one item remaining after deletion. " +
+                    "Returns the updated purchase order with remaining items.",
+            tags = {"PurchaseOrder"},
+            responses = {
+                    @ApiResponse(
+                            description = "Success - Item successfully removed",
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = PurchaseOrderResponseDTO.class))
+                    ),
+                    @ApiResponse(
+                            description = "Bad Request - Order not in DRAFT status, item not found, or last item cannot be removed",
+                            responseCode = "400",
+                            content = @Content
+                    ),
+                    @ApiResponse(description = "Unauthorized - Missing ADMIN or MANAGER role", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found - Order ID or item ID not found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+            }
+    )
+    ResponseEntity<PurchaseOrderResponseDTO> deleteItem(
+            @PathVariable("id") Long id,
+            @PathVariable("itemId") Long itemId
     );
 
     @Operation(summary = "Confirms a Purchase Order",
